@@ -114,4 +114,14 @@ docker run -d \
   sh -c "cd /app && npm install && node server.js"
 
 
+docker run -d \
+  --name easymemo-backend \
+  --network easymemo-network \
+  -p 3007:3005 \
+  -v /volume1/docker2/easymemo-backend:/app:rw \
+  -e MONGODB_URI="mongodb://admin:@4the9817@easymemo-mongodb:27017/easymemo?authSource=admin" \
+  node:18 \
+  sh -c "cd /app && npm install && node server.js"
+
+
   docker network connect easymemo-network easymemo-mongodb
