@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface Memo {
-  id: string
+  _id?: string  // MongoDB의 _id
+  id: string    // 로컬 ID
   content: string
   createdAt: string
   isOffline?: boolean
@@ -14,6 +15,7 @@ interface MemoStore {
   isLoading: boolean
   isOnline: boolean
   error: string | null
+  fetchMemos: () => Promise<void>
   addMemo: (content: string) => Promise<void>
   deleteMemo: (id: string) => Promise<void>
   syncOfflineMemos: () => Promise<void>
@@ -21,7 +23,7 @@ interface MemoStore {
   checkOnlineStatus: () => Promise<void>
 }
 
-const API_URL = 'http://junny.dyndns.org:3005/api'
+const API_URL = 'https://junny.dyndns.org:3008/api'
 
 const checkServerConnection = async () => {
   try {
@@ -33,7 +35,7 @@ const checkServerConnection = async () => {
         'Content-Type': 'application/json'
       },
       mode: 'cors',
-      credentials: 'omit'
+      credentials: 'include'
     });
     console.log('서버 응답:', response.status, response.ok);
     return response.ok;
@@ -51,12 +53,39 @@ export const useMemoStore = create<MemoStore>()(
       isOnline: false,
       error: null,
 
+      fetchMemos: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(`${API_URL}/memos`, {
+            headers: {
+              'Accept': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            throw new Error('메모 목록 가져오기 실패');
+          }
+
+          const memos = await response.json();
+          set({ memos, isLoading: false });
+        } catch (error) {
+          console.error('메모 목록 가져오기 오류:', error);
+          set({ 
+            error: error instanceof Error ? error.message : '메모 목록 가져오기 중 오류가 발생했습니다',
+            isLoading: false 
+          });
+        }
+      },
+
       checkOnlineStatus: async () => {
         console.log('온라인 상태 체크 시작');
         const isConnected = await checkServerConnection();
         console.log('온라인 상태:', isConnected);
         set({ isOnline: isConnected });
         if (isConnected) {
+          get().fetchMemos();
           get().syncOfflineMemos();
         }
       },
@@ -92,7 +121,10 @@ export const useMemoStore = create<MemoStore>()(
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
+                  'Accept': 'application/json'
                 },
+                mode: 'cors',
+                credentials: 'include',
                 body: JSON.stringify({ content }),
               });
 
@@ -125,34 +157,49 @@ export const useMemoStore = create<MemoStore>()(
       },
 
       deleteMemo: async (id: string) => {
-        set({ isLoading: true, error: null })
-        const { isOnline } = get()
+        set({ isLoading: true, error: null });
+        const { isOnline } = get();
 
         try {
           if (isOnline) {
-            try {
-              const response = await fetch(`${API_URL}/memos/${id}`, {
-                method: 'DELETE',
-              })
+            console.log('메모 삭제 요청:', id);
+            const response = await fetch(`${API_URL}/memos/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Accept': 'application/json'
+              },
+              mode: 'cors',
+              credentials: 'include'
+            });
 
-              if (!response.ok) {
-                throw new Error('서버 응답 오류')
-              }
-            } catch (error) {
-              console.error('메모 서버 삭제 실패:', error)
-              // 오프라인이거나 서버 오류 시에도 로컬에서는 삭제 진행
+            if (!response.ok) {
+              throw new Error('서버 응답 오류');
             }
+            
+            console.log('메모 삭제 성공:', id);
           }
 
-          set((state) => ({
-            memos: state.memos.filter((memo) => memo.id !== id),
-            isLoading: false
-          }))
+          // 로컬 상태 업데이트
+          set((state) => {
+            console.log('현재 메모 목록:', state.memos);
+            const updatedMemos = state.memos.filter((memo) => {
+              const memoId = memo._id || memo.id;
+              console.log('비교:', memoId, id);
+              return memoId !== id;
+            });
+            console.log('필터링된 메모 목록:', updatedMemos);
+            return {
+              memos: updatedMemos,
+              isLoading: false
+            };
+          });
+
         } catch (error) {
+          console.error('메모 삭제 중 오류:', error);
           set({ 
             error: error instanceof Error ? error.message : '메모 삭제 중 오류가 발생했습니다',
             isLoading: false 
-          })
+          });
         }
       },
 
