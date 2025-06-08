@@ -2,8 +2,12 @@ import React from 'react'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import GoogleAnalytics from './components/GoogleAnalytics'
 
 const inter = Inter({ subsets: ['latin'] })
+
+// Google Analytics 측정 ID
+const GA_MEASUREMENT_ID = 'G-MTWMMHJP0J'
 
 export const viewport: Viewport = {
   themeColor: '#4A90E2',
@@ -32,7 +36,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <GoogleAnalytics GA_MEASUREMENT_ID={GA_MEASUREMENT_ID} />
+        {children}
+      </body>
     </html>
   )
 } 
