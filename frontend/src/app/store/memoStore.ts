@@ -25,13 +25,21 @@ const API_URL = 'http://junny.dyndns.org:3005/api'
 
 const checkServerConnection = async () => {
   try {
+    console.log('서버 연결 상태 확인 중...');
     const response = await fetch(`${API_URL}/memos`, {
-      method: 'HEAD'
-    })
-    return response.ok
+      method: 'HEAD',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    console.log('서버 응답:', response.status, response.ok);
+    return response.ok;
   } catch (error) {
-    console.error('서버 연결 확인 실패:', error)
-    return false
+    console.error('서버 연결 확인 실패:', error);
+    return false;
   }
 }
 
@@ -44,25 +52,29 @@ export const useMemoStore = create<MemoStore>()(
       error: null,
 
       checkOnlineStatus: async () => {
-        const isConnected = await checkServerConnection()
-        set({ isOnline: isConnected })
+        console.log('온라인 상태 체크 시작');
+        const isConnected = await checkServerConnection();
+        console.log('온라인 상태:', isConnected);
+        set({ isOnline: isConnected });
         if (isConnected) {
-          get().syncOfflineMemos()
+          get().syncOfflineMemos();
         }
       },
 
       setOnlineStatus: (status: boolean) => {
+        console.log('브라우저 온라인 상태 변경:', status);
         if (status) {
-          get().checkOnlineStatus()
+          get().checkOnlineStatus();
         } else {
-          set({ isOnline: false })
+          set({ isOnline: false });
         }
       },
 
       addMemo: async (content: string) => {
-        set({ isLoading: true, error: null })
-        await get().checkOnlineStatus()
-        const { isOnline } = get()
+        set({ isLoading: true, error: null });
+        await get().checkOnlineStatus();
+        const { isOnline } = get();
+        console.log('메모 추가 시 온라인 상태:', isOnline);
         
         try {
           const newMemo: Memo = {
@@ -71,41 +83,44 @@ export const useMemoStore = create<MemoStore>()(
             createdAt: new Date().toISOString(),
             isOffline: !isOnline,
             syncStatus: isOnline ? 'synced' : 'pending'
-          }
+          };
 
           if (isOnline) {
             try {
+              console.log('서버에 메모 저장 시도');
               const response = await fetch(`${API_URL}/memos`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ content }),
-              })
+              });
 
               if (!response.ok) {
-                throw new Error('서버 응답 오류')
+                throw new Error('서버 응답 오류');
               }
 
-              const serverMemo = await response.json()
-              newMemo.id = serverMemo.id
-              newMemo.createdAt = serverMemo.createdAt
+              const serverMemo = await response.json();
+              console.log('서버 응답 메모:', serverMemo);
+              newMemo.id = serverMemo.id;
+              newMemo.createdAt = serverMemo.createdAt;
             } catch (error) {
-              newMemo.isOffline = true
-              newMemo.syncStatus = 'failed'
-              console.error('메모 서버 저장 실패:', error)
+              console.error('메모 서버 저장 실패:', error);
+              newMemo.isOffline = true;
+              newMemo.syncStatus = 'failed';
             }
           }
 
           set((state) => ({
             memos: [newMemo, ...state.memos],
             isLoading: false
-          }))
+          }));
         } catch (error) {
+          console.error('메모 추가 중 오류:', error);
           set({ 
             error: error instanceof Error ? error.message : '메모 추가 중 오류가 발생했습니다',
             isLoading: false 
-          })
+          });
         }
       },
 
