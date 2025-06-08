@@ -169,12 +169,20 @@ export const useMemoStore = create<MemoStore>()(
 
       deleteMemo: async (id: string) => {
         set({ isLoading: true, error: null });
-        const { isOnline } = get();
+        const { isOnline, memos } = get();
 
         try {
-          if (isOnline && id) {  // id가 유효한 경우에만 서버 요청
-            console.log('메모 삭제 요청:', id);
-            const response = await fetch(`${API_URL}/memos/${id}`, {
+          // 메모 찾기
+          const memo = memos.find(m => (m._id || m.id) === id);
+          
+          if (!memo) {
+            throw new Error('메모를 찾을 수 없습니다');
+          }
+
+          // 온라인 상태이고 서버에 저장된 메모인 경우에만 서버 요청
+          if (isOnline && memo._id && !memo.isOffline) {
+            console.log('서버에 메모 삭제 요청:', memo._id);
+            const response = await fetch(`${API_URL}/memos/${memo._id}`, {
               method: 'DELETE',
               headers: {
                 'Accept': 'application/json'
@@ -187,25 +195,14 @@ export const useMemoStore = create<MemoStore>()(
               throw new Error('서버 응답 오류');
             }
             
-            console.log('메모 삭제 성공:', id);
-          } else if (!id) {
-            throw new Error('유효하지 않은 메모 ID');
+            console.log('메모 삭제 성공:', memo._id);
           }
 
           // 로컬 상태 업데이트
-          set((state) => {
-            console.log('현재 메모 목록:', state.memos);
-            const updatedMemos = state.memos.filter((memo) => {
-              const memoId = memo._id || memo.id;
-              console.log('비교:', memoId, id);
-              return memoId !== id;
-            });
-            console.log('필터링된 메모 목록:', updatedMemos);
-            return {
-              memos: updatedMemos,
-              isLoading: false
-            };
-          });
+          set((state) => ({
+            memos: state.memos.filter((m) => (m._id || m.id) !== id),
+            isLoading: false
+          }));
 
         } catch (error) {
           console.error('메모 삭제 중 오류:', error);
