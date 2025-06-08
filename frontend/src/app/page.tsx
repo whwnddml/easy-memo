@@ -6,7 +6,7 @@ import MemoList from './components/MemoList'
 import { useMemoStore } from './store/memoStore'
 
 export default function Home() {
-  const { setOnlineStatus, checkOnlineStatus, isLoading, error } = useMemoStore();
+  const { setOnlineStatus, checkOnlineStatus, error } = useMemoStore();
 
   useEffect(() => {
     // 초기 온라인 상태 체크
@@ -39,10 +39,13 @@ export default function Home() {
   return (
     <main className="container">
       <h1>EasyMemo</h1>
-      {isLoading && <div className="loading">로딩 중...</div>}
       {error && <div className="error">{error}</div>}
-      <MemoForm />
-      <MemoList />
+      <div className="content-area">
+        <div className="memo-form-container">
+          <MemoForm />
+        </div>
+        <MemoList />
+      </div>
     </main>
   )
 } 
