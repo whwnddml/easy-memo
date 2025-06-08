@@ -69,7 +69,18 @@ export const useMemoStore = create<MemoStore>()(
           }
 
           const memos = await response.json();
-          set({ memos, isLoading: false });
+          // 서버에서 받은 메모 데이터 구조 확인 및 변환
+          const formattedMemos = memos.map((memo: any) => ({
+            _id: memo._id, // MongoDB ID
+            id: memo._id,  // 호환성을 위해 id도 설정
+            content: memo.content,
+            createdAt: memo.createdAt,
+            isOffline: false,
+            syncStatus: 'synced'
+          }));
+          
+          console.log('서버에서 받은 메모:', formattedMemos);
+          set({ memos: formattedMemos, isLoading: false });
         } catch (error) {
           console.error('메모 목록 가져오기 오류:', error);
           set({ 
@@ -161,7 +172,7 @@ export const useMemoStore = create<MemoStore>()(
         const { isOnline } = get();
 
         try {
-          if (isOnline) {
+          if (isOnline && id) {  // id가 유효한 경우에만 서버 요청
             console.log('메모 삭제 요청:', id);
             const response = await fetch(`${API_URL}/memos/${id}`, {
               method: 'DELETE',
@@ -177,6 +188,8 @@ export const useMemoStore = create<MemoStore>()(
             }
             
             console.log('메모 삭제 성공:', id);
+          } else if (!id) {
+            throw new Error('유효하지 않은 메모 ID');
           }
 
           // 로컬 상태 업데이트
