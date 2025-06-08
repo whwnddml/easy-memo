@@ -18,9 +18,22 @@ interface MemoStore {
   deleteMemo: (id: string) => Promise<void>
   syncOfflineMemos: () => Promise<void>
   setOnlineStatus: (status: boolean) => void
+  checkOnlineStatus: () => Promise<void>
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://junny.dyndns.org:3005/api'
+const API_URL = 'http://junny.dyndns.org:3005/api'
+
+const checkServerConnection = async () => {
+  try {
+    const response = await fetch(`${API_URL}/memos`, {
+      method: 'HEAD'
+    })
+    return response.ok
+  } catch (error) {
+    console.error('서버 연결 확인 실패:', error)
+    return false
+  }
+}
 
 export const useMemoStore = create<MemoStore>()(
   persist(
@@ -30,24 +43,25 @@ export const useMemoStore = create<MemoStore>()(
       isOnline: false,
       error: null,
 
+      checkOnlineStatus: async () => {
+        const isConnected = await checkServerConnection()
+        set({ isOnline: isConnected })
+        if (isConnected) {
+          get().syncOfflineMemos()
+        }
+      },
+
       setOnlineStatus: (status: boolean) => {
-        const { isOnline: currentIsOnline } = get()
-        fetch(`${API_URL}/health`)
-          .then(response => {
-            if (response.ok) {
-              set({ isOnline: true })
-              get().syncOfflineMemos()
-            } else {
-              set({ isOnline: false })
-            }
-          })
-          .catch(() => {
-            set({ isOnline: false })
-          })
+        if (status) {
+          get().checkOnlineStatus()
+        } else {
+          set({ isOnline: false })
+        }
       },
 
       addMemo: async (content: string) => {
         set({ isLoading: true, error: null })
+        await get().checkOnlineStatus()
         const { isOnline } = get()
         
         try {
