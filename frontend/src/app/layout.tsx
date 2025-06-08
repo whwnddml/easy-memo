@@ -16,11 +16,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'EasyMemo - 간단한 메모장',
   description: '언제 어디서나 메모를 작성하고 관리하세요',
-  manifest: '/manifest.json',
+  manifest: '/easy-memo/manifest.json',
   icons: {
     icon: [
-      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/easy-memo/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/easy-memo/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
   },
 }
