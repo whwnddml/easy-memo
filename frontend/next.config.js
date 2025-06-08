@@ -97,6 +97,9 @@ const nextConfig = {
   trailingSlash: true,
   assetPrefix: '/easy-memo/',
   distDir: 'out',
+  experimental: {
+    appDir: true,
+  },
 }
 
 module.exports = withPWA(nextConfig) 
