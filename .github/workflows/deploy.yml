@@ -35,8 +35,6 @@ jobs:
           npm run export
           touch out/.nojekyll
           echo "easy-memo.whwnddml.github.io" > out/CNAME
-          echo "<!-- Deployed at $(date) -->" >> out/index.html
-          ls -la out/
           cp out/index.html out/404.html
 
       - name: Deploy
@@ -45,5 +43,4 @@ jobs:
           folder: frontend/out
           branch: gh-pages
           clean: true
-          single-commit: true
-          commit-message: "Deploy to GitHub Pages [skip ci]" 
+          single-commit: true 
