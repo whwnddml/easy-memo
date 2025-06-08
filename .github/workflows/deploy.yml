@@ -27,12 +27,11 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Build and Export
+      - name: Build
         run: |
           cd frontend
           rm -rf out
           npm run build
-          npm run export
           touch out/.nojekyll
           echo "easy-memo.whwnddml.github.io" > out/CNAME
           cp out/index.html out/404.html
