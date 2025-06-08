@@ -36,8 +36,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={inter.className}>
+      <head>
         <GoogleAnalytics GA_MEASUREMENT_ID={GA_MEASUREMENT_ID} />
+      </head>
+      <body className={inter.className}>
         {children}
       </body>
     </html>
