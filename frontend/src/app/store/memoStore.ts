@@ -2,21 +2,15 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface Memo {
-  _id?: string
-  id?: number
+  id: string
   content: string
   createdAt: string
-  updatedAt: string
-  isOffline?: boolean
 }
 
 interface MemoStore {
   memos: Memo[]
-  isLoading: boolean
-  error: string | null
-  fetchMemos: () => Promise<void>
   addMemo: (content: string) => Promise<void>
-  deleteMemo: (id: string | number) => Promise<void>
+  deleteMemo: (id: string) => Promise<void>
   syncOfflineMemos: () => Promise<void>
 }
 
@@ -47,11 +41,9 @@ const createLocalStore = (set: any) => ({
     set({ isLoading: true, error: null })
     try {
       const newMemo = {
-        id: Date.now(),
+        id: Date.now().toString(),
         content,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isOffline: !navigator.onLine,
       }
       set((state: any) => {
         const newMemos = [newMemo, ...state.memos]
@@ -63,7 +55,7 @@ const createLocalStore = (set: any) => ({
     }
   },
 
-  deleteMemo: async (id: number) => {
+  deleteMemo: async (id: string) => {
     set({ isLoading: true, error: null })
     try {
       set((state: any) => {
@@ -160,7 +152,7 @@ const createApiStore = (set: any) => ({
         method: 'DELETE',
       })
       set((state: any) => ({
-        memos: state.memos.filter((memo: Memo) => memo._id !== id),
+        memos: state.memos.filter((memo: Memo) => memo.id !== id),
         isLoading: false,
       }))
     } catch (error) {
@@ -175,9 +167,33 @@ const createApiStore = (set: any) => ({
 
 // 환경에 따라 다른 스토어 생성
 export const useMemoStore = create<MemoStore>()(
-  isProduction
-    ? createApiStore
-    : persist(createLocalStore, {
-        name: 'memo-storage',
-      })
+  persist(
+    (set, get) => ({
+      memos: [],
+      addMemo: async (content: string) => {
+        const newMemo: Memo = {
+          id: Date.now().toString(),
+          content,
+          createdAt: new Date().toISOString(),
+        }
+        set((state) => ({
+          memos: [newMemo, ...state.memos],
+        }))
+      },
+      deleteMemo: async (id: string) => {
+        set((state) => ({
+          memos: state.memos.filter((memo) => memo.id !== id),
+        }))
+      },
+      syncOfflineMemos: async () => {
+        // 오프라인 메모 동기화 로직
+        const { memos } = get()
+        console.log('Syncing memos:', memos)
+      },
+    }),
+    {
+      name: 'memo-storage',
+      skipHydration: true,
+    }
+  )
 ) 
