@@ -30,10 +30,14 @@ jobs:
       - name: Build and Export
         run: |
           cd frontend
+          rm -rf out
           npm run build
           npm run export
           touch out/.nojekyll
-          cp -r out/* out/
+          echo "easy-memo.whwnddml.github.io" > out/CNAME
+          echo "<!-- Deployed at $(date) -->" >> out/index.html
+          ls -la out/
+          cp out/index.html out/404.html
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
@@ -42,4 +46,4 @@ jobs:
           branch: gh-pages
           clean: true
           single-commit: true
-          commit-message: "Deploy to GitHub Pages" 
+          commit-message: "Deploy to GitHub Pages [skip ci]" 
