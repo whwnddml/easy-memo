@@ -20,21 +20,30 @@ interface MemoStore {
   setOnlineStatus: (status: boolean) => void
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://junny.dyndns.org:3005/api'
 
 export const useMemoStore = create<MemoStore>()(
   persist(
     (set, get) => ({
       memos: [],
       isLoading: false,
-      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : false,
+      isOnline: false,
       error: null,
 
       setOnlineStatus: (status: boolean) => {
-        set({ isOnline: status })
-        if (status) {
-          get().syncOfflineMemos()
-        }
+        const { isOnline: currentIsOnline } = get()
+        fetch(`${API_URL}/health`)
+          .then(response => {
+            if (response.ok) {
+              set({ isOnline: true })
+              get().syncOfflineMemos()
+            } else {
+              set({ isOnline: false })
+            }
+          })
+          .catch(() => {
+            set({ isOnline: false })
+          })
       },
 
       addMemo: async (content: string) => {
