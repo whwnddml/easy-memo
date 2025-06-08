@@ -42,3 +42,56 @@ http://localhost:5000
 - GET /api/memos: 메모 목록 조회
 - POST /api/memos: 새 메모 생성
 - DELETE /api/memos/:id: 메모 삭제 
+
+
+-------------------------------------------
+컨테이너 이름: easymemo-mongodb
+이미지: mongo:latest
+포트 설정:
+  - 로컬 포트: 27017
+  - 컨테이너 포트: 27017
+환경 변수:
+  - MONGODB_INITDB_ROOT_USERNAME: [원하는 사용자명]
+  - MONGODB_INITDB_ROOT_PASSWORD: [안전한 비밀번호]
+볼륨 설정:
+  - /volume1/docker/mongodb/data:/data/db
+  - /volume1/docker/mongodb/config:/data/configdb
+
+
+  admin
+  K**9**
+
+docker rm easymemo-mongodb
+
+docker run --name easymemo-mongodb \
+-e MONGODB_INITDB_ROOT_USERNAME=admin \
+-e MONGODB_INITDB_ROOT_PASSWORD=Kumis94@27 \
+-v /volume1/docker2/mongodb/data:/data/db \
+-p 27017:27017 \
+mongodb/mongodb-community-server:latest
+
+
+
+
+docker run --name easymemo-mongodb \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD=Kumis94@27 \
+  -v /volume1/docker2/mongodb/data:/data/db \
+  -p 27017:27017 \
+  mongo:4.4.18
+
+.env
+ MONGODB_URI=mongodb://admin:Kumis94@27@[시놀로지_IP]:27017
+
+
+root@SynoDS:~# docker exec -it easymemo-mongodb mongo -u admin -p 'Kumis94@27'
+MongoDB shell version v4.4.18
+connecting to: mongodb://127.0.0.1:27017/?compressors=disabled&gssapiServiceName=mongodb
+Error: Authentication failed. :
+connect@src/mongo/shell/mongo.js:374:17
+@(connect):2:6
+exception: connect failed
+exiting with code 1
+root@SynoDS:~# 
+
+docker exec -it easymemo-mongodb mongo -u admin -p 'Kumis94@27' --authenticationDatabase admin
