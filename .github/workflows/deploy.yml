@@ -27,10 +27,12 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Build
+      - name: Build and Export
         run: |
           cd frontend
           npm run build
+          npm run export
+          touch out/.nojekyll
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
@@ -38,4 +40,5 @@ jobs:
           folder: frontend/out
           branch: gh-pages
           clean: true
-          single-commit: true 
+          single-commit: true
+          commit-message: "Deploy to GitHub Pages" 
