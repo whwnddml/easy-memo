@@ -37,4 +37,5 @@ jobs:
         with:
           folder: frontend/out
           branch: gh-pages
-          clean: true 
+          clean: true
+          single-commit: true 
