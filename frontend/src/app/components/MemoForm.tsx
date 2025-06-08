@@ -16,16 +16,15 @@ export default function MemoForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={`memo-form ${isLoading ? 'submitting' : ''}`}>
+    <form onSubmit={handleSubmit} className="memo-form">
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="메모를 입력하세요..."
-        disabled={isLoading}
       />
       <div className="button-row">
         <button type="submit" disabled={isLoading || !content.trim()}>
-          {isLoading ? '저장 중...' : '저장'}
+          저장
         </button>
       </div>
     </form>
