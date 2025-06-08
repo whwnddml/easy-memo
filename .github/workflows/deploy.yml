@@ -35,6 +35,7 @@ jobs:
           touch out/.nojekyll
           echo "easy-memo.whwnddml.github.io" > out/CNAME
           cp out/index.html out/404.html
+          ls -la out/
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
