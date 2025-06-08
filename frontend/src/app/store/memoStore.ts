@@ -6,184 +6,74 @@ interface Memo {
   content: string
   createdAt: string
   isOffline?: boolean
+  syncStatus?: 'pending' | 'synced' | 'failed'
 }
 
 interface MemoStore {
   memos: Memo[]
   isLoading: boolean
+  isOnline: boolean
   error: string | null
   addMemo: (content: string) => Promise<void>
   deleteMemo: (id: string) => Promise<void>
   syncOfflineMemos: () => Promise<void>
+  setOnlineStatus: (status: boolean) => void
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
-const isProduction = process.env.NODE_ENV === 'production'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3005/api'
 
-// 로컬 스토리지용 스토어
-const createLocalStore = (set: any) => ({
-  memos: [],
-  isLoading: false,
-  error: null,
-
-  fetchMemos: async () => {
-    set({ isLoading: true, error: null })
-    try {
-      const storedMemos = localStorage.getItem('memos')
-      if (storedMemos) {
-        set({ memos: JSON.parse(storedMemos), isLoading: false })
-      } else {
-        set({ memos: [], isLoading: false })
-      }
-    } catch (error) {
-      set({ error: '메모를 불러오는데 실패했습니다', isLoading: false })
-    }
-  },
-
-  addMemo: async (content: string) => {
-    set({ isLoading: true, error: null })
-    try {
-      const newMemo = {
-        id: Date.now().toString(),
-        content,
-        createdAt: new Date().toISOString(),
-      }
-      set((state: any) => {
-        const newMemos = [newMemo, ...state.memos]
-        localStorage.setItem('memos', JSON.stringify(newMemos))
-        return { memos: newMemos, isLoading: false }
-      })
-    } catch (error) {
-      set({ error: '메모 추가에 실패했습니다', isLoading: false })
-    }
-  },
-
-  deleteMemo: async (id: string) => {
-    set({ isLoading: true, error: null })
-    try {
-      set((state: any) => {
-        const newMemos = state.memos.filter((memo: Memo) => memo.id !== id)
-        localStorage.setItem('memos', JSON.stringify(newMemos))
-        return { memos: newMemos, isLoading: false }
-      })
-    } catch (error) {
-      set({ error: '메모 삭제에 실패했습니다', isLoading: false })
-    }
-  },
-
-  syncOfflineMemos: async () => {
-    if (!navigator.onLine) return
-
-    set({ isLoading: true, error: null })
-    try {
-      const storedMemos = localStorage.getItem('memos')
-      if (storedMemos) {
-        const memos = JSON.parse(storedMemos)
-        const offlineMemos = memos.filter((memo: Memo) => memo.isOffline)
-
-        for (const memo of offlineMemos) {
-          try {
-            await fetch(`${API_URL}/memos`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ content: memo.content }),
-            })
-          } catch (error) {
-            console.error('오프라인 메모 동기화 실패:', error)
-          }
-        }
-
-        // 동기화된 메모 업데이트
-        set((state: any) => {
-          const newMemos = state.memos.map((memo: Memo) => ({
-            ...memo,
-            isOffline: false,
-          }))
-          localStorage.setItem('memos', JSON.stringify(newMemos))
-          return { memos: newMemos, isLoading: false }
-        })
-      }
-    } catch (error) {
-      set({ error: '오프라인 메모 동기화에 실패했습니다', isLoading: false })
-    }
-  },
-})
-
-// 백엔드 API용 스토어
-const createApiStore = (set: any) => ({
-  memos: [],
-  isLoading: false,
-  error: null,
-
-  fetchMemos: async () => {
-    set({ isLoading: true, error: null })
-    try {
-      const response = await fetch(`${API_URL}/memos`)
-      const data = await response.json()
-      set({ memos: data, isLoading: false })
-    } catch (error) {
-      set({ error: '메모를 불러오는데 실패했습니다', isLoading: false })
-    }
-  },
-
-  addMemo: async (content: string) => {
-    set({ isLoading: true, error: null })
-    try {
-      const response = await fetch(`${API_URL}/memos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-      })
-      const newMemo = await response.json()
-      set((state: any) => ({
-        memos: [newMemo, ...state.memos],
-        isLoading: false,
-      }))
-    } catch (error) {
-      set({ error: '메모 추가에 실패했습니다', isLoading: false })
-    }
-  },
-
-  deleteMemo: async (id: string) => {
-    set({ isLoading: true, error: null })
-    try {
-      await fetch(`${API_URL}/memos/${id}`, {
-        method: 'DELETE',
-      })
-      set((state: any) => ({
-        memos: state.memos.filter((memo: Memo) => memo.id !== id),
-        isLoading: false,
-      }))
-    } catch (error) {
-      set({ error: '메모 삭제에 실패했습니다', isLoading: false })
-    }
-  },
-
-  syncOfflineMemos: async () => {
-    // 프로덕션 환경에서는 오프라인 동기화가 필요 없음
-  },
-})
-
-// 환경에 따라 다른 스토어 생성
 export const useMemoStore = create<MemoStore>()(
   persist(
     (set, get) => ({
       memos: [],
       isLoading: false,
+      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : false,
       error: null,
+
+      setOnlineStatus: (status: boolean) => {
+        set({ isOnline: status })
+        if (status) {
+          get().syncOfflineMemos()
+        }
+      },
+
       addMemo: async (content: string) => {
         set({ isLoading: true, error: null })
+        const { isOnline } = get()
+        
         try {
           const newMemo: Memo = {
             id: Date.now().toString(),
             content,
             createdAt: new Date().toISOString(),
-            isOffline: !navigator.onLine
+            isOffline: !isOnline,
+            syncStatus: isOnline ? 'synced' : 'pending'
           }
+
+          if (isOnline) {
+            try {
+              const response = await fetch(`${API_URL}/memos`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content }),
+              })
+
+              if (!response.ok) {
+                throw new Error('서버 응답 오류')
+              }
+
+              const serverMemo = await response.json()
+              newMemo.id = serverMemo.id
+              newMemo.createdAt = serverMemo.createdAt
+            } catch (error) {
+              newMemo.isOffline = true
+              newMemo.syncStatus = 'failed'
+              console.error('메모 서버 저장 실패:', error)
+            }
+          }
+
           set((state) => ({
             memos: [newMemo, ...state.memos],
             isLoading: false
@@ -195,9 +85,27 @@ export const useMemoStore = create<MemoStore>()(
           })
         }
       },
+
       deleteMemo: async (id: string) => {
         set({ isLoading: true, error: null })
+        const { isOnline } = get()
+
         try {
+          if (isOnline) {
+            try {
+              const response = await fetch(`${API_URL}/memos/${id}`, {
+                method: 'DELETE',
+              })
+
+              if (!response.ok) {
+                throw new Error('서버 응답 오류')
+              }
+            } catch (error) {
+              console.error('메모 서버 삭제 실패:', error)
+              // 오프라인이거나 서버 오류 시에도 로컬에서는 삭제 진행
+            }
+          }
+
           set((state) => ({
             memos: state.memos.filter((memo) => memo.id !== id),
             isLoading: false
@@ -209,9 +117,55 @@ export const useMemoStore = create<MemoStore>()(
           })
         }
       },
+
       syncOfflineMemos: async () => {
-        const { memos } = get()
-        console.log('Syncing memos:', memos)
+        const { memos, isOnline } = get()
+        if (!isOnline) return
+
+        const offlineMemos = memos.filter(
+          (memo) => memo.isOffline || memo.syncStatus === 'failed' || memo.syncStatus === 'pending'
+        )
+
+        for (const memo of offlineMemos) {
+          try {
+            const response = await fetch(`${API_URL}/memos`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ content: memo.content }),
+            })
+
+            if (!response.ok) {
+              throw new Error('서버 응답 오류')
+            }
+
+            const serverMemo = await response.json()
+
+            set((state) => ({
+              memos: state.memos.map((m) =>
+                m.id === memo.id
+                  ? {
+                      ...m,
+                      id: serverMemo.id,
+                      isOffline: false,
+                      syncStatus: 'synced',
+                    }
+                  : m
+              ),
+            }))
+          } catch (error) {
+            console.error('오프라인 메모 동기화 실패:', error)
+            // 실패한 메모는 다음 동기화 시도를 위해 상태 업데이트
+            set((state) => ({
+              memos: state.memos.map((m) =>
+                m.id === memo.id
+                  ? { ...m, syncStatus: 'failed' }
+                  : m
+              ),
+            }))
+          }
+        }
       }
     }),
     {
