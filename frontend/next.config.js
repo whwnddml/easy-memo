@@ -89,6 +89,11 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'export',
+  basePath: process.env.NODE_ENV === 'production' ? '/easy-memo' : '',
+  images: {
+    unoptimized: true,
+  },
 }
 
 module.exports = withPWA(nextConfig) 
