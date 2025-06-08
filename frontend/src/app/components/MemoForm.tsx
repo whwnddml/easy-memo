@@ -23,7 +23,9 @@ export default function MemoForm() {
         placeholder="메모를 입력하세요..."
         style={{ color: '#333' }}
       />
-      <button type="submit">저장</button>
+      <div className="button-row">
+        <button type="submit">저장</button>
+      </div>
     </form>
   )
 } 

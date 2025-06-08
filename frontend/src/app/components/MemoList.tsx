@@ -14,7 +14,7 @@ export default function MemoList() {
   }
 
   return (
-    <div className="memo-list">
+    <div>
       {memos.map((memo) => (
         <div key={memo.id} className="memo-item">
           <p>{memo.content}</p>
@@ -23,7 +23,7 @@ export default function MemoList() {
               {new Date(memo.createdAt).toLocaleString('ko-KR')}
               {memo.isOffline && <span className="offline-badge">오프라인</span>}
             </span>
-            <button onClick={() => deleteMemo(memo.id)}>삭제</button>
+            <button className="delete-btn" onClick={() => deleteMemo(memo.id)}>삭제</button>
           </div>
         </div>
       ))}
