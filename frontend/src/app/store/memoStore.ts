@@ -5,10 +5,13 @@ interface Memo {
   id: string
   content: string
   createdAt: string
+  isOffline?: boolean
 }
 
 interface MemoStore {
   memos: Memo[]
+  isLoading: boolean
+  error: string | null
   addMemo: (content: string) => Promise<void>
   deleteMemo: (id: string) => Promise<void>
   syncOfflineMemos: () => Promise<void>
@@ -170,30 +173,50 @@ export const useMemoStore = create<MemoStore>()(
   persist(
     (set, get) => ({
       memos: [],
+      isLoading: false,
+      error: null,
       addMemo: async (content: string) => {
-        const newMemo: Memo = {
-          id: Date.now().toString(),
-          content,
-          createdAt: new Date().toISOString(),
+        set({ isLoading: true, error: null })
+        try {
+          const newMemo: Memo = {
+            id: Date.now().toString(),
+            content,
+            createdAt: new Date().toISOString(),
+            isOffline: !navigator.onLine
+          }
+          set((state) => ({
+            memos: [newMemo, ...state.memos],
+            isLoading: false
+          }))
+        } catch (error) {
+          set({ 
+            error: error instanceof Error ? error.message : '메모 추가 중 오류가 발생했습니다',
+            isLoading: false 
+          })
         }
-        set((state) => ({
-          memos: [newMemo, ...state.memos],
-        }))
       },
       deleteMemo: async (id: string) => {
-        set((state) => ({
-          memos: state.memos.filter((memo) => memo.id !== id),
-        }))
+        set({ isLoading: true, error: null })
+        try {
+          set((state) => ({
+            memos: state.memos.filter((memo) => memo.id !== id),
+            isLoading: false
+          }))
+        } catch (error) {
+          set({ 
+            error: error instanceof Error ? error.message : '메모 삭제 중 오류가 발생했습니다',
+            isLoading: false 
+          })
+        }
       },
       syncOfflineMemos: async () => {
-        // 오프라인 메모 동기화 로직
         const { memos } = get()
         console.log('Syncing memos:', memos)
-      },
+      }
     }),
     {
       name: 'memo-storage',
-      skipHydration: true,
+      skipHydration: true
     }
   )
 ) 

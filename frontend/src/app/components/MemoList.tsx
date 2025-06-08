@@ -5,14 +5,25 @@ import { useMemoStore } from '../store/memoStore'
 export default function MemoList() {
   const { memos, deleteMemo } = useMemoStore()
 
+  if (memos.length === 0) {
+    return (
+      <div className="memo-empty">
+        <p>작성된 메모가 없습니다.</p>
+      </div>
+    )
+  }
+
   return (
-    <div>
+    <div className="memo-list">
       {memos.map((memo) => (
-        <div key={memo._id || memo.id} className="memo-item">
+        <div key={memo.id} className="memo-item">
           <p>{memo.content}</p>
           <div className="memo-footer">
-            <span>{new Date(memo.createdAt).toLocaleString('ko-KR')}</span>
-            <button onClick={() => deleteMemo(memo._id || memo.id)}>삭제</button>
+            <span className="timestamp">
+              {new Date(memo.createdAt).toLocaleString('ko-KR')}
+              {memo.isOffline && <span className="offline-badge">오프라인</span>}
+            </span>
+            <button onClick={() => deleteMemo(memo.id)}>삭제</button>
           </div>
         </div>
       ))}

@@ -6,11 +6,9 @@ import MemoList from './components/MemoList'
 import { useMemoStore } from './store/memoStore'
 
 export default function Home() {
-  const { fetchMemos, syncOfflineMemos, isLoading, error } = useMemoStore();
+  const { syncOfflineMemos, isLoading, error } = useMemoStore();
 
   useEffect(() => {
-    fetchMemos();
-
     // 온라인 상태 변경 이벤트 리스너
     const handleOnline = () => {
       syncOfflineMemos();
@@ -21,19 +19,13 @@ export default function Home() {
     return () => {
       window.removeEventListener('online', handleOnline);
     };
-  }, [fetchMemos, syncOfflineMemos]);
-
-  if (isLoading) {
-    return <div className="loading">로딩 중...</div>;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
+  }, [syncOfflineMemos]);
 
   return (
     <main className="container">
-      <h1>온라인 메모</h1>
+      <h1>EasyMemo</h1>
+      {isLoading && <div className="loading">로딩 중...</div>}
+      {error && <div className="error">{error}</div>}
       <MemoForm />
       <MemoList />
     </main>
