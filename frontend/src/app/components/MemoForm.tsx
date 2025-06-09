@@ -11,6 +11,7 @@ export default function MemoForm() {
     osVersion: '',
     browser: '',
     browserVersion: '',
+    deviceModel: '',
     userAgent: ''
   })
   const { addMemo, isOnline } = useMemoStore()
@@ -28,15 +29,37 @@ export default function MemoForm() {
     // 운영체제 및 버전 감지
     let os = 'unknown'
     let osVersion = 'unknown'
+    let deviceModel = 'unknown'
     
     if (userAgentLower.includes('android')) {
       os = 'Android'
       const match = userAgent.match(/Android\s([0-9.]*)/)
       if (match) osVersion = match[1]
+      
+      // Android 기기 모델명 추출
+      const modelMatch = userAgent.match(/;\s([^;)]+)\sBuild/)
+      if (modelMatch) {
+        deviceModel = modelMatch[1].trim()
+      }
     } else if (userAgentLower.includes('iphone') || userAgentLower.includes('ipad')) {
       os = 'iOS'
       const match = userAgent.match(/OS\s([0-9_]*)/)
       if (match) osVersion = match[1].replace(/_/g, '.')
+      
+      // iOS 기기 모델명 추출
+      if (userAgentLower.includes('iphone')) {
+        deviceModel = 'iPhone'
+        const modelMatch = userAgent.match(/iPhone\s*(\d+)/i)
+        if (modelMatch) {
+          deviceModel += ` ${modelMatch[1]}`
+        }
+      } else if (userAgentLower.includes('ipad')) {
+        deviceModel = 'iPad'
+        const modelMatch = userAgent.match(/iPad\s*(\d+)/i)
+        if (modelMatch) {
+          deviceModel += ` ${modelMatch[1]}`
+        }
+      }
     } else if (userAgentLower.includes('windows')) {
       os = 'Windows'
       const match = userAgent.match(/Windows\sNT\s([0-9.]*)/)
@@ -85,6 +108,7 @@ export default function MemoForm() {
       osVersion,
       browser,
       browserVersion,
+      deviceModel,
       userAgent
     })
   }, [])
@@ -116,6 +140,7 @@ export default function MemoForm() {
           <small>
             <div>앱 타입: {collectionInfo.appType}</div>
             <div>운영체제: {collectionInfo.os} {collectionInfo.osVersion}</div>
+            <div>디바이스: {collectionInfo.deviceModel}</div>
             <div>브라우저: {collectionInfo.browser} {collectionInfo.browserVersion}</div>
             <div>User Agent: {collectionInfo.userAgent}</div>
           </small>
