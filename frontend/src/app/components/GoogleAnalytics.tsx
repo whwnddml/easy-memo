@@ -1,7 +1,6 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect } from 'react';
 
 // GA 타입 선언
 declare global {
@@ -11,38 +10,6 @@ declare global {
 }
 
 export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_ID: string }) {
-  useEffect(() => {
-    // 앱 타입 감지 (PWA로 실행되었는지 확인)
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                 (window.navigator as any).standalone || 
-                 document.referrer.includes('android-app://');
-
-    // 운영체제 감지
-    const userAgent = navigator.userAgent.toLowerCase();
-    let os = 'unknown';
-    
-    if (userAgent.includes('android')) {
-      os = 'Android';
-    } else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
-      os = 'iOS';
-    } else if (userAgent.includes('windows')) {
-      os = 'Windows';
-    } else if (userAgent.includes('macintosh') || userAgent.includes('mac os')) {
-      os = 'MacOS';
-    } else if (userAgent.includes('linux')) {
-      os = 'Linux';
-    }
-
-    // GA 이벤트 전송
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', 'app_type_detection', {
-        'app_type': isPWA ? 'mobile_app' : 'desktop_web',
-        'operating_system': os,
-        'user_agent': navigator.userAgent
-      });
-    }
-  }, []);
-
   return (
     <>
       <Script
@@ -54,11 +21,42 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
+
+          // 운영체제 감지
+          let os = 'unknown';
+          const userAgent = navigator.userAgent.toLowerCase();
+          
+          if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
+            os = 'iOS';
+          } else if (userAgent.includes('android')) {
+            os = 'Android';
+          } else if (userAgent.includes('windows')) {
+            os = 'Windows';
+          } else if (userAgent.includes('macintosh') || userAgent.includes('mac os')) {
+            os = 'MacOS';
+          } else if (userAgent.includes('linux')) {
+            os = 'Linux';
+          }
+
+          // PWA 감지
+          const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                       navigator.standalone || 
+                       document.referrer.includes('android-app://');
+
           gtag('config', '${GA_MEASUREMENT_ID}', {
-            'custom_map': {
-              'dimension1': 'app_type',
-              'dimension2': 'operating_system'
-            }
+            custom_map: {
+              dimension1: 'operating_system',
+              dimension2: 'app_type'
+            },
+            operating_system: os,
+            app_type: isPWA ? 'PWA' : 'Web'
+          });
+
+          // 사용자 정보 이벤트 전송
+          gtag('event', 'user_info', {
+            operating_system: os,
+            app_type: isPWA ? 'PWA' : 'Web',
+            user_agent: navigator.userAgent
           });
         `}
       </Script>
