@@ -1,11 +1,45 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMemoStore } from '../store/memoStore'
 
 export default function MemoForm() {
   const [content, setContent] = useState('')
+  const [collectionInfo, setCollectionInfo] = useState({
+    appType: '',
+    os: '',
+    userAgent: ''
+  })
   const { addMemo, isOnline } = useMemoStore()
+
+  useEffect(() => {
+    // 앱 타입 감지
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                 (window.navigator as any).standalone || 
+                 document.referrer.includes('android-app://')
+
+    // 운영체제 감지
+    const userAgent = navigator.userAgent.toLowerCase()
+    let os = 'unknown'
+    
+    if (userAgent.includes('android')) {
+      os = 'Android'
+    } else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+      os = 'iOS'
+    } else if (userAgent.includes('windows')) {
+      os = 'Windows'
+    } else if (userAgent.includes('macintosh') || userAgent.includes('mac os')) {
+      os = 'MacOS'
+    } else if (userAgent.includes('linux')) {
+      os = 'Linux'
+    }
+
+    setCollectionInfo({
+      appType: isPWA ? 'PWA' : 'Web',
+      os: os,
+      userAgent: navigator.userAgent
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +66,9 @@ export default function MemoForm() {
       {showCollectionInfo && (
         <div className="collection-info">
           <small>
-            수집 정보: 앱 타입, 운영체제, 사용자 에이전트
+            <div>앱 타입: {collectionInfo.appType}</div>
+            <div>운영체제: {collectionInfo.os}</div>
+            <div>User Agent: {collectionInfo.userAgent}</div>
           </small>
         </div>
       )}

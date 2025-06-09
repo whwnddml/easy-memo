@@ -286,7 +286,7 @@ h1 {
 
 .collection-info {
   margin-top: 8px;
-  padding: 4px 8px;
+  padding: 8px 12px;
   background-color: #f8f9fa;
   border-radius: 4px;
   border: 1px solid #e9ecef;
@@ -295,5 +295,14 @@ h1 {
 .collection-info small {
   color: #6c757d;
   font-size: 0.8rem;
-  line-height: 1.4;
+  line-height: 1.6;
+}
+
+.collection-info small div {
+  margin-bottom: 4px;
+}
+
+.collection-info small div:last-child {
+  margin-bottom: 0;
+  word-break: break-all;
 } 
