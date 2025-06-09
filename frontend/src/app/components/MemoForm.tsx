@@ -53,13 +53,29 @@ export default function MemoForm() {
         // Vivo
         /VIVO\s[A-Z0-9]+/,
         // 일반적인 Android 기기
-        /;\s([^;)]+)\sBuild/
+        /;\s([^;)]+)\sBuild/,
+        // 추가 패턴
+        /;\s([^;)]+)\sMIUI/,
+        /;\s([^;)]+)\sKernel/,
+        /;\s([^;)]+)\sSDK/,
+        /;\s([^;)]+)\sAndroid/,
+        /;\s([^;)]+)\sLinux/
       ]
 
       for (const pattern of modelMatches) {
         const modelMatch = userAgent.match(pattern)
         if (modelMatch) {
-          deviceModel = modelMatch[0].trim()
+          // 첫 번째 그룹이 있는 경우 해당 그룹 사용, 없으면 전체 매치 사용
+          deviceModel = (modelMatch[1] || modelMatch[0]).trim()
+          // 불필요한 정보 제거
+          deviceModel = deviceModel
+            .replace(/\sBuild.*$/, '')
+            .replace(/\sMIUI.*$/, '')
+            .replace(/\sKernel.*$/, '')
+            .replace(/\sSDK.*$/, '')
+            .replace(/\sAndroid.*$/, '')
+            .replace(/\sLinux.*$/, '')
+            .trim()
           break
         }
       }
