@@ -36,10 +36,40 @@ export default function MemoForm() {
       const match = userAgent.match(/Android\s([0-9.]*)/)
       if (match) osVersion = match[1]
       
-      // Android 기기 모델명 추출
-      const modelMatch = userAgent.match(/;\s([^;)]+)\sBuild/)
-      if (modelMatch) {
-        deviceModel = modelMatch[1].trim()
+      // Android 기기 모델명 추출 (개선된 버전)
+      const modelMatches = [
+        // Samsung
+        /SM-[A-Z0-9]+/,
+        // Google Pixel
+        /Pixel\s[0-9]+/,
+        // OnePlus
+        /ONEPLUS\s[A-Z0-9]+/,
+        // Xiaomi
+        /MI\s[A-Z0-9]+/,
+        // Huawei
+        /HUAWEI\s[A-Z0-9]+/,
+        // OPPO
+        /OPPO\s[A-Z0-9]+/,
+        // Vivo
+        /VIVO\s[A-Z0-9]+/,
+        // 일반적인 Android 기기
+        /;\s([^;)]+)\sBuild/
+      ]
+
+      for (const pattern of modelMatches) {
+        const modelMatch = userAgent.match(pattern)
+        if (modelMatch) {
+          deviceModel = modelMatch[0].trim()
+          break
+        }
+      }
+
+      // 모델명이 여전히 unknown이면 전체 User-Agent에서 추출 시도
+      if (deviceModel === 'unknown') {
+        const fullModelMatch = userAgent.match(/;\s([^;)]+)\sBuild/)
+        if (fullModelMatch) {
+          deviceModel = fullModelMatch[1].trim()
+        }
       }
     } else if (userAgentLower.includes('iphone') || userAgentLower.includes('ipad')) {
       os = 'iOS'
