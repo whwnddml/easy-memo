@@ -110,25 +110,38 @@ export default function MemoForm() {
       os = 'Linux'
     }
 
-    // 브라우저 및 버전 감지
+    // 브라우저 및 버전 감지 (개선된 버전)
     let browser = 'unknown'
     let browserVersion = 'unknown'
 
-    if (userAgentLower.includes('chrome')) {
+    // iOS Chrome 감지
+    if (userAgentLower.includes('crios')) {
+      browser = 'Chrome'
+      const match = userAgent.match(/CriOS\/([0-9.]*)/)
+      if (match) browserVersion = match[1]
+    }
+    // Android Chrome 감지
+    else if (userAgentLower.includes('chrome') && !userAgentLower.includes('edg')) {
       browser = 'Chrome'
       const match = userAgent.match(/Chrome\/([0-9.]*)/)
       if (match) browserVersion = match[1]
-    } else if (userAgentLower.includes('firefox')) {
+    }
+    // Edge 감지
+    else if (userAgentLower.includes('edg')) {
+      browser = 'Edge'
+      const match = userAgent.match(/Edg\/([0-9.]*)/)
+      if (match) browserVersion = match[1]
+    }
+    // Firefox 감지
+    else if (userAgentLower.includes('firefox')) {
       browser = 'Firefox'
       const match = userAgent.match(/Firefox\/([0-9.]*)/)
       if (match) browserVersion = match[1]
-    } else if (userAgentLower.includes('safari')) {
+    }
+    // Safari 감지 (iOS의 기본 브라우저)
+    else if (userAgentLower.includes('safari') && !userAgentLower.includes('chrome')) {
       browser = 'Safari'
       const match = userAgent.match(/Version\/([0-9.]*)/)
-      if (match) browserVersion = match[1]
-    } else if (userAgentLower.includes('edge')) {
-      browser = 'Edge'
-      const match = userAgent.match(/Edge\/([0-9.]*)/)
       if (match) browserVersion = match[1]
     }
 
