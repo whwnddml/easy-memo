@@ -17,11 +17,23 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
                  (window.navigator as any).standalone || 
                  document.referrer.includes('android-app://');
 
+    // 모바일 플랫폼 감지
+    const userAgent = navigator.userAgent.toLowerCase();
+    const platform = navigator.platform;
+    
+    let mobilePlatform = 'desktop';
+    if (userAgent.includes('android')) {
+      mobilePlatform = 'android';
+    } else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+      mobilePlatform = 'ios';
+    }
+
     // GA 이벤트 전송
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'app_type_detection', {
         'app_type': isPWA ? 'mobile_app' : 'desktop_web',
-        'platform': navigator.platform,
+        'platform': platform,
+        'mobile_platform': mobilePlatform,
         'user_agent': navigator.userAgent
       });
     }
@@ -41,7 +53,8 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
           gtag('config', '${GA_MEASUREMENT_ID}', {
             'custom_map': {
               'dimension1': 'app_type',
-              'dimension2': 'platform'
+              'dimension2': 'platform',
+              'dimension3': 'mobile_platform'
             }
           });
         `}
