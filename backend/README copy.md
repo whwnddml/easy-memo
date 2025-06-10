@@ -63,28 +63,20 @@ http://localhost:5000
 
 docker rm easymemo-mongodb
 
-docker run --name easymemo-mongodb \
--e MONGODB_INITDB_ROOT_USERNAME=admin \
--e MONGODB_INITDB_ROOT_PASSWORD=Kumis94@27 \
--v /volume1/docker2/mongodb/data:/data/db \
--p 27017:27017 \
-mongodb/mongodb-community-server:latest
 
-
-
-
+#몽고DB 실행을 위한 컨테이너 실행.
 docker run --name easymemo-mongodb \
   -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=Kumis94@27 \
+  -e MONGO_INITDB_ROOT_PASSWORD=@4the9817 \
   -v /volume1/docker2/mongodb/data:/data/db \
   -p 27017:27017 \
   mongo:4.4.18
 
 .env
- MONGODB_URI=mongodb://admin:Kumis94@27@[시놀로지_IP]:27017
+ MONGODB_URI=mongodb://admin:@4the9817@[시놀로지_IP]:27017
 
 
-docker run -d --name easymemo-mongodb --network easymemo-network -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD="Kumis94@27" mongo:4.4.18 --bind_ip 0.0.0.0
+docker run -d --name easymemo-mongodb --network easymemo-network -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD="@4the9817" mongo:4.4.18 --bind_ip 0.0.0.0
 
 docker run -d --name easymemo-backend --network easymemo-network -p 3007:3005 -v $(pwd)/../backend:/app -w /app node:18 npm start
 
