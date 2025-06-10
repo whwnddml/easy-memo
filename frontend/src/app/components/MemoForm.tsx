@@ -122,13 +122,6 @@ export default function MemoForm() {
       <button type="submit" disabled={!content.trim() || !isOnline}>
         저장
       </button>
-      <div className="debug-info" style={{ fontSize: '12px', color: '#666', marginTop: '10px', whiteSpace: 'pre-wrap' }}>
-        <div>앱 타입: {collectionInfo.appType}</div>
-        <div>운영체제: {collectionInfo.os} {collectionInfo.osVersion}</div>
-        <div>디바이스: {collectionInfo.deviceModel}</div>
-        <div>브라우저: {collectionInfo.browser} {collectionInfo.browserVersion}</div>
-        <div style={{ wordBreak: 'break-all' }}>User Agent: {collectionInfo.userAgent}</div>
-      </div>
     </form>
   )
 } 

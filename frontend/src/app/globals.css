@@ -205,6 +205,16 @@ h1 {
   justify-content: flex-end;
 }
 
+.memo-actions button {
+  min-width: 90px;
+  max-width: 120px;
+  width: 90px;
+  font-size: 1rem;
+  padding: 7px 0;
+  height: 38px;
+  box-sizing: border-box;
+}
+
 .memo-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -290,10 +300,12 @@ h1 {
   .memo-actions {
     flex-direction: row;
     gap: 8px;
+    justify-content: flex-end;
   }
   .memo-actions button {
-    flex: 1 1 0;
-    min-width: 0;
+    min-width: 80px;
+    max-width: 120px;
+    width: 90px;
     font-size: 0.95rem;
     padding: 7px 0;
     height: 38px;
