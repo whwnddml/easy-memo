@@ -17,6 +17,7 @@ interface MemoStore {
   error: string | null
   fetchMemos: () => Promise<void>
   addMemo: (content: string) => Promise<void>
+  updateMemo: (id: string, content: string) => Promise<void>
   deleteMemo: (id: string) => Promise<void>
   syncOfflineMemos: () => Promise<void>
   setOnlineStatus: (status: boolean) => void
@@ -162,6 +163,58 @@ export const useMemoStore = create<MemoStore>()(
           console.error('메모 추가 중 오류:', error);
           set({ 
             error: error instanceof Error ? error.message : '메모 추가 중 오류가 발생했습니다',
+            isLoading: false 
+          });
+        }
+      },
+
+      updateMemo: async (id: string, content: string) => {
+        set({ isLoading: true, error: null });
+        const { isOnline, memos } = get();
+
+        try {
+          // 메모 찾기
+          const memo = memos.find(m => (m._id || m.id) === id);
+          
+          if (!memo) {
+            throw new Error('메모를 찾을 수 없습니다');
+          }
+
+          // 온라인 상태이고 서버에 저장된 메모인 경우에만 서버 요청
+          if (isOnline && memo._id && !memo.isOffline) {
+            console.log('서버에 메모 수정 요청:', memo._id);
+            const response = await fetch(`${API_URL}/memos/${memo._id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              mode: 'cors',
+              credentials: 'include',
+              body: JSON.stringify({ content })
+            });
+
+            if (!response.ok) {
+              throw new Error('서버 응답 오류');
+            }
+            
+            console.log('메모 수정 성공:', memo._id);
+          }
+
+          // 로컬 상태 업데이트
+          set((state) => ({
+            memos: state.memos.map((m) => 
+              (m._id || m.id) === id 
+                ? { ...m, content, isOffline: !isOnline, syncStatus: isOnline ? 'synced' : 'pending' }
+                : m
+            ),
+            isLoading: false
+          }));
+
+        } catch (error) {
+          console.error('메모 수정 중 오류:', error);
+          set({ 
+            error: error instanceof Error ? error.message : '메모 수정 중 오류가 발생했습니다',
             isLoading: false 
           });
         }
