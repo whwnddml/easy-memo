@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useMemoStore } from '../store/memoStore'
+import { FaEdit, FaTrash } from 'react-icons/fa'
+
+// 모바일 환경 감지 함수
+const isMobile = () => {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth <= 600;
+};
 
 export default function MemoList() {
   const { memos, deleteMemo, updateMemo, fetchMemos, isLoading } = useMemoStore()
@@ -74,24 +81,51 @@ export default function MemoList() {
                     {memo.isOffline && <span className="offline-badge">오프라인</span>}
                   </div>
                   <div className="memo-actions">
-                    <button 
-                      className="edit-btn"
-                      onClick={() => handleEdit(memo)}
-                      disabled={isLoading}
-                    >
-                      수정
-                    </button>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => {
-                        if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
-                          deleteMemo(memo._id || memo.id)
-                        }
-                      }}
-                      disabled={isLoading}
-                    >
-                      삭제
-                    </button>
+                    {isMobile() ? (
+                      <>
+                        <button 
+                          className="edit-btn"
+                          onClick={() => handleEdit(memo)}
+                          disabled={isLoading}
+                          aria-label="수정"
+                        >
+                          <FaEdit size={18} />
+                        </button>
+                        <button 
+                          className="delete-btn"
+                          onClick={() => {
+                            if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
+                              deleteMemo(memo._id || memo.id)
+                            }
+                          }}
+                          disabled={isLoading}
+                          aria-label="삭제"
+                        >
+                          <FaTrash size={18} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button 
+                          className="edit-btn"
+                          onClick={() => handleEdit(memo)}
+                          disabled={isLoading}
+                        >
+                          수정
+                        </button>
+                        <button 
+                          className="delete-btn"
+                          onClick={() => {
+                            if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
+                              deleteMemo(memo._id || memo.id)
+                            }
+                          }}
+                          disabled={isLoading}
+                        >
+                          삭제
+                        </button>
+                      </>
+                    )}
                   </div>
                 </>
               )}
