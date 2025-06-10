@@ -36,7 +36,9 @@ jobs:
           password: ${{ secrets.SYNOLOGY_PASSWORD }}
           port: ${{ secrets.SYNOLOGY_SSH_PORT }}
           script: |
+            export PATH="/usr/local/bin:$PATH"
             cd /volume1/docker2/easymemo-backend
+
             # 중요 파일 백업
             cp docker-compose.yml docker-compose.yml.backup
             cp .env .env.backup
@@ -62,5 +64,5 @@ jobs:
             #git stash pop
 
             # Docker 재시작
-            docker-compose stop
-            docker-compose up -d --build 
+            /usr/local/bin/docker-compose stop
+            /usr/local/bin/docker-compose up -d --build
