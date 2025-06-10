@@ -10,6 +10,44 @@ const isMobile = () => {
   return window.innerWidth <= 600;
 };
 
+// 운영체제 이름/버전/플랫폼 추출 함수
+function getOSInfo() {
+  if (typeof window === 'undefined') return '';
+  const userAgent = window.navigator.userAgent;
+  const platform = window.navigator.platform;
+  let os = 'unknown';
+  let osVersion = '';
+
+  if (/android/i.test(userAgent)) {
+    os = 'Android';
+    const match = userAgent.match(/Android\s([0-9\.]+)/i);
+    if (match) osVersion = match[1];
+  } else if (/iphone|ipad|ipod/i.test(userAgent)) {
+    os = 'iOS';
+    const match = userAgent.match(/OS\s([0-9_]+)/i);
+    if (match) osVersion = match[1].replace(/_/g, '.');
+  } else if (/windows nt/i.test(userAgent)) {
+    os = 'Windows';
+    const match = userAgent.match(/Windows NT ([0-9\.]+)/i);
+    if (match) {
+      const v = match[1];
+      osVersion = {
+        '10.0': '10',
+        '6.3': '8.1',
+        '6.2': '8',
+        '6.1': '7',
+      }[v] || v;
+    }
+  } else if (/macintosh|mac os x/i.test(userAgent)) {
+    os = 'MacOS';
+    const match = userAgent.match(/Mac OS X ([0-9_]+)/i);
+    if (match) osVersion = match[1].replace(/_/g, '.');
+  } else if (/linux/i.test(userAgent)) {
+    os = 'Linux';
+  }
+  return `${os}${osVersion ? ' ' + osVersion : ''} (${platform})`;
+}
+
 export default function MemoList() {
   const { memos, deleteMemo, updateMemo, fetchMemos, isLoading } = useMemoStore()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -136,7 +174,7 @@ export default function MemoList() {
       <div className="collection-info">
         <small>
           <div>앱 타입: {typeof window !== 'undefined' && (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) ? 'PWA' : 'Web'}</div>
-          <div>운영체제: {typeof window !== 'undefined' ? window.navigator.platform : ''}</div>
+          <div>운영체제: {getOSInfo()}</div>
           <div>User Agent: {typeof window !== 'undefined' ? window.navigator.userAgent : ''}</div>
         </small>
       </div>
