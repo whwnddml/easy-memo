@@ -111,11 +111,21 @@ export default function MemoForm() {
     setContent('')
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (content.trim() && isOnline) {
+        handleSubmit(e as any);
+      }
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="memo-form">
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder="메모를 입력하세요..."
         disabled={!isOnline}
       />
