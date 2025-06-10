@@ -324,6 +324,7 @@ h1 {
   font-size: 1rem;
   resize: vertical;
   background: #fafbfc;
+  box-sizing: border-box;
 }
 
 .edit-textarea:focus {
