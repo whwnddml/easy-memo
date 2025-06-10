@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/deploy-frontend.yml'  
 
 permissions:
   contents: write
