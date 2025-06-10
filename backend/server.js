@@ -158,6 +158,36 @@ app.delete('/api/memos/:id', async (req, res, next) => {
   }
 });
 
+// 메모 수정
+app.put('/api/memos/:id', async (req, res, next) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: '잘못된 메모 ID입니다' });
+    }
+
+    if (!req.body.content || req.body.content.trim() === '') {
+      return res.status(400).json({ message: '메모 내용은 필수입니다' });
+    }
+
+    const updatedMemo = await Memo.findByIdAndUpdate(
+      req.params.id,
+      { 
+        content: req.body.content.trim(),
+        updatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedMemo) {
+      return res.status(404).json({ message: '메모를 찾을 수 없습니다' });
+    }
+
+    res.json(updatedMemo);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // 에러 핸들러 등록
 app.use(errorHandler);
 

@@ -7,6 +7,7 @@
 ### 1. API 엔드포인트
 - `GET /api/memos`: 메모 목록 조회 (시간순 정렬)
 - `POST /api/memos`: 새 메모 생성
+- `PUT /api/memos/:id`: 메모 수정
 - `DELETE /api/memos/:id`: 메모 삭제
 - `HEAD /api/memos`: 서버 상태 확인
 
@@ -102,6 +103,24 @@ npm run dev
 }
 ```
 - 응답: 생성된 메모 객체
+
+### PUT /api/memos/:id
+- 설명: 메모 수정
+- 요청 본문:
+```json
+{
+  "content": "수정된 메모 내용"
+}
+```
+- 응답: 수정된 메모 객체
+```json
+{
+  "_id": "메모ID",
+  "content": "수정된 메모 내용",
+  "createdAt": "생성일시",
+  "updatedAt": "수정일시"
+}
+```
 
 ### DELETE /api/memos/:id
 - 설명: 메모 삭제
