@@ -97,14 +97,6 @@ docker exec -it easymemo-mongodb mongo -u admin -p 'Kumis94@27' --authentication
 docker stop easymemo-backend
 docker rm easymemo-backend
 
-docker run -d \
-  --name easymemo-backend \
-  --network easymemo-network \
-  -p 3007:3005 \
-  -v /volume1/docker2/easymemo-backend:/app:rw \
-  node:18 \
-  sh -c "cd /app && npm install && node server.js"
-
 
 docker run -d \
   --name easymemo-backend \
@@ -190,12 +182,15 @@ services:
     ports:
       - 3007:3005
     command: sh -c "cd /app && npm install && node server.js"
+    env_file:
+      - /volume1/docker2/easymemo-backend/.env
     networks:
       - easymemo-network
 
 networks:
   easymemo-network:
-    driver: bridge
+    external: true      # 이미 만든 네트워크 쓸 때 추가!
+    name: easymemo-network
 
 
 
