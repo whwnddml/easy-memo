@@ -113,6 +113,8 @@ h1 {
   color: #333;
   background: #fafbfc;
   transition: border-color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .memo-form textarea:focus {
