@@ -94,7 +94,14 @@ const Memo = mongoose.model('Memo', memoSchema);
 
 // 에러 핸들러 미들웨어
 const errorHandler = (err, req, res, next) => {
-  console.error('에러 발생:', err);
+  console.error('에러 발생:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    body: req.body,
+    params: req.params
+  });
   res.status(err.status || 500).json({
     message: err.message || '서버 내부 오류가 발생했습니다'
   });
@@ -161,11 +168,19 @@ app.delete('/api/memos/:id', async (req, res, next) => {
 // 메모 수정
 app.put('/api/memos/:id', async (req, res, next) => {
   try {
+    console.log('메모 수정 요청:', {
+      id: req.params.id,
+      content: req.body.content,
+      headers: req.headers
+    });
+
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      console.log('잘못된 메모 ID:', req.params.id);
       return res.status(400).json({ message: '잘못된 메모 ID입니다' });
     }
 
     if (!req.body.content || req.body.content.trim() === '') {
+      console.log('메모 내용 누락');
       return res.status(400).json({ message: '메모 내용은 필수입니다' });
     }
 
@@ -179,11 +194,14 @@ app.put('/api/memos/:id', async (req, res, next) => {
     );
 
     if (!updatedMemo) {
+      console.log('메모를 찾을 수 없음:', req.params.id);
       return res.status(404).json({ message: '메모를 찾을 수 없습니다' });
     }
 
+    console.log('메모 수정 성공:', updatedMemo);
     res.json(updatedMemo);
   } catch (error) {
+    console.error('메모 수정 중 오류:', error);
     next(error);
   }
 });
