@@ -68,32 +68,30 @@ export default function MemoList() {
                 </div>
               ) : (
                 <>
-                  <p>{memo.content}</p>
-                  <div className="memo-footer">
-                    <span className="timestamp">
-                      {new Date(memo.createdAt).toLocaleString('ko-KR')}
-                      {memo.isOffline && <span className="offline-badge">오프라인</span>}
-                    </span>
-                    <div className="memo-actions">
-                      <button 
-                        className="edit-btn"
-                        onClick={() => handleEdit(memo)}
-                        disabled={isLoading}
-                      >
-                        수정
-                      </button>
-                      <button 
-                        className="delete-btn"
-                        onClick={() => {
-                          if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
-                            deleteMemo(memo._id || memo.id)
-                          }
-                        }}
-                        disabled={isLoading}
-                      >
-                        삭제
-                      </button>
-                    </div>
+                  <div className="memo-content">{memo.content}</div>
+                  <div className="memo-date">
+                    {new Date(memo.createdAt).toLocaleString('ko-KR')}
+                    {memo.isOffline && <span className="offline-badge">오프라인</span>}
+                  </div>
+                  <div className="memo-actions">
+                    <button 
+                      className="edit-btn"
+                      onClick={() => handleEdit(memo)}
+                      disabled={isLoading}
+                    >
+                      수정
+                    </button>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => {
+                        if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
+                          deleteMemo(memo._id || memo.id)
+                        }
+                      }}
+                      disabled={isLoading}
+                    >
+                      삭제
+                    </button>
                   </div>
                 </>
               )}
