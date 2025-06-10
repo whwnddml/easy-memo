@@ -84,7 +84,11 @@ export default function MemoList() {
                       </button>
                       <button 
                         className="delete-btn"
-                        onClick={() => deleteMemo(memo._id || memo.id)}
+                        onClick={() => {
+                          if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
+                            deleteMemo(memo._id || memo.id)
+                          }
+                        }}
                         disabled={isLoading}
                       >
                         삭제
