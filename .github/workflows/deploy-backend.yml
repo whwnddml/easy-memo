@@ -56,6 +56,10 @@ jobs:
             git fetch origin
             git checkout origin/main -- backend/
 
+            # 기존 소스(백엔드) 덮어쓰기 (중앙에 파일들이 직접 위치하도록 이동)
+            cp -rf backend/* ./
+            rm -rf backend/
+
             # 백업했던 파일 복원
             mv docker-compose.yml.backup docker-compose.yml
             mv .env.backup .env
