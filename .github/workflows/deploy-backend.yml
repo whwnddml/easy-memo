@@ -37,7 +37,29 @@ jobs:
           port: ${{ secrets.SYNOLOGY_SSH_PORT }}
           script: |
             cd /volume1/docker2/easymemo-backend
+            # 중요 파일 백업
+            cp docker-compose.yml docker-compose.yml.backup
+            cp .env .env.backup
+
+            # git 저장소가 없는 경우 초기화
+            if [ ! -d .git ]; then
+              git init
+              git remote add origin https://github.com/whwnddml/easymemo.git
+            fi
+
+            # 현재 변경사항 스태시
+            git stash
+
+            # 최신 코드 가져오기 (backend 폴더만)
             git fetch origin
-            git reset --hard origin/main
+            git checkout origin/main -- backend/
+            # 백업했던 파일 복원
+            mv docker-compose.yml.backup docker-compose.yml
+            mv .env.backup .env
+
+            # 스태시 적용
+            #git stash pop
+
+            # Docker 재시작
             echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker-compose stop
             echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker-compose up -d --build 

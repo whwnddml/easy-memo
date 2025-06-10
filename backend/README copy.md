@@ -117,3 +117,86 @@ docker run -d \
 
 
   docker network connect easymemo-network easymemo-mongodb
+
+chmod 644 docker-compose.yml
+sudo chown -R eworks:users .git
+chmod -R u+rwX .git
+
+
+
+------------------------------------------------------------------
+-- docker-compose-all.yml => 미완성
+------------------------------------------------------------------
+version: '3.8'
+
+services:
+  backend:
+    image: node:18.20.8 # 필요시 backend 이미지를 빌드하려면 build 옵션 사용
+    container_name: easymemo-backend
+    working_dir: /app
+    volumes:
+      - /volume1/docker2/easymemo-backend:/app
+    ports:
+      - 3007:3005
+    environment:
+      MONGODB_USER: ${MONGODB_USER}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+      MONGODB_HOST: ${MONGODB_HOST}
+      MONGODB_PORT: ${MONGODB_PORT}
+      MONGODB_DB: ${MONGODB_DB}
+      NODE_VERSION: ${NODE_VERSION:-18.20.8}
+      YARN_VERSION: ${YARN_VERSION:-1.22.22}
+    command: sh -c "cd /app && npm install && node server.js"
+    networks:
+      - easymemo-network
+
+  mongo:
+    image: mongo:6.0
+    container_name: easymemo-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_DB}
+    volumes:
+      - /volume1/docker2/easymemo-mongodb:/data/db
+    ports:
+      - 27017:27017
+    networks:
+      - easymemo-network
+
+networks:
+  easymemo-network:
+    driver: bridge
+
+
+
+------------------------------------------------------------------
+-- docker-compose.yml
+------------------------------------------------------------------
+version: '3.8'
+
+services:
+  backend:
+    image: node:18.20.8 # 필요시 backend 이미지를 빌드하려면 build 옵션 사용
+    container_name: easymemo-backend
+    working_dir: /app
+    volumes:
+      - /volume1/docker2/easymemo-backend:/app
+    ports:
+      - 3007:3005
+    command: sh -c "cd /app && npm install && node server.js"
+    networks:
+      - easymemo-network
+
+networks:
+  easymemo-network:
+    driver: bridge
+
+
+
+MONGODB_USER=admin
+MONGODB_PASSWORD=@4the9817
+MONGODB_HOST=mongo
+MONGODB_PORT=27017
+MONGODB_DB=easymemo    
