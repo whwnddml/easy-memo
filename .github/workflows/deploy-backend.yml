@@ -36,11 +36,26 @@ jobs:
           password: ${{ secrets.SYNOLOGY_PASSWORD }}
           port: ${{ secrets.SYNOLOGY_SSH_PORT }}
           script: |
+            # 디렉토리가 없으면 생성
+            mkdir -p /volume1/docker2/easymemo-backend
+            
+            # 디렉토리로 이동
             cd /volume1/docker2/easymemo-backend
-            git pull origin main
-            sudo docker stop easymemo-backend || true
-            sudo docker rm easymemo-backend || true
-            sudo docker run -d \
+            
+            # Git 저장소가 없으면 초기화
+            if [ ! -d .git ]; then
+              git init
+              git remote add origin https://github.com/whwnddml/easy-memo.git
+            fi
+            
+            # 변경사항 가져오기
+            git fetch origin
+            git reset --hard origin/main
+            
+            # Docker 컨테이너 재시작
+            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker stop easymemo-backend || true
+            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker rm easymemo-backend || true
+            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker run -d \
               --name easymemo-backend \
               --network easymemo-network \
               -p 3007:3005 \
