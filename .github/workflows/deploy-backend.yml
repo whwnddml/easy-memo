@@ -42,6 +42,9 @@ jobs:
             # 디렉토리로 이동
             cd /volume1/docker2/easymemo-backend
             
+            # Git 설정
+            git config --global --add safe.directory /volume1/docker2/easymemo-backend
+            
             # Git 저장소가 없으면 초기화
             if [ ! -d .git ]; then
               git init
@@ -53,9 +56,9 @@ jobs:
             git reset --hard origin/main
             
             # Docker 컨테이너 재시작
-            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker stop easymemo-backend || true
-            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker rm easymemo-backend || true
-            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker run -d \
+            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S /usr/local/bin/docker stop easymemo-backend || true
+            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S /usr/local/bin/docker rm easymemo-backend || true
+            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S /usr/local/bin/docker run -d \
               --name easymemo-backend \
               --network easymemo-network \
               -p 3007:3005 \
