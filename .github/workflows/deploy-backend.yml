@@ -44,7 +44,7 @@ jobs:
             # git 저장소가 없는 경우 초기화
             if [ ! -d .git ]; then
               git init
-              git remote add origin https://github.com/whwnddml/easymemo.git
+              git remote add origin https://github.com/whwnddml/easy-memo.git
             fi
 
             # 현재 변경사항 스태시
@@ -53,6 +53,7 @@ jobs:
             # 최신 코드 가져오기 (backend 폴더만)
             git fetch origin
             git checkout origin/main -- backend/
+            
             # 백업했던 파일 복원
             mv docker-compose.yml.backup docker-compose.yml
             mv .env.backup .env
@@ -61,5 +62,5 @@ jobs:
             #git stash pop
 
             # Docker 재시작
-            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker-compose stop
-            echo "${{ secrets.SYNOLOGY_PASSWORD }}" | sudo -S docker-compose up -d --build 
+            sudo docker-compose stop
+            sudo docker-compose up -d --build 
