@@ -121,8 +121,12 @@ docker run -d \
 chmod 644 docker-compose.yml
 sudo chown -R eworks:users .git
 chmod -R u+rwX .git
+sudo usermod -aG docker eworks
 
+chown root:administrators /var/run/docker.sock
+chmod 660 /var/run/docker.sock
 
+ls -l /var/run/docker.sock
 
 ------------------------------------------------------------------
 -- docker-compose-all.yml => 미완성
