@@ -53,7 +53,7 @@ jobs:
             # 최신 코드 가져오기 (backend 폴더만)
             git fetch origin
             git checkout origin/main -- backend/
-            
+
             # 백업했던 파일 복원
             mv docker-compose.yml.backup docker-compose.yml
             mv .env.backup .env
@@ -62,5 +62,5 @@ jobs:
             #git stash pop
 
             # Docker 재시작
-            sudo docker-compose stop
-            sudo docker-compose up -d --build 
+            docker-compose stop
+            docker-compose up -d --build 
