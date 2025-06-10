@@ -97,7 +97,9 @@ docker exec -it easymemo-mongodb mongo -u admin -p 'Kumis94@27' --authentication
 docker stop easymemo-backend
 docker rm easymemo-backend
 
-
+------------------------------------------------------------------
+-- 직접 명령으로 실행.
+------------------------------------------------------------------
 docker run -d \
   --name easymemo-backend \
   --network easymemo-network \
