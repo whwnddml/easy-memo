@@ -1,0 +1,50 @@
+name: Deploy Backend to Synology
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'backend/server.js'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Deploy to Synology
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SYNOLOGY_HOST }}
+          username: ${{ secrets.SYNOLOGY_USERNAME }}
+          password: ${{ secrets.SYNOLOGY_PASSWORD }}
+          port: ${{ secrets.SYNOLOGY_SSH_PORT }}
+          script: |
+            cd /volume1/docker2/easymemo-backend
+            git pull origin main
+            sudo docker stop easymemo-backend || true
+            sudo docker rm easymemo-backend || true
+            sudo docker run -d \
+              --name easymemo-backend \
+              --network easymemo-network \
+              -p 3007:3005 \
+              -v /volume1/docker2/easymemo-backend:/app:rw \
+              --env-file /volume1/docker2/easymemo-backend/.env \
+              node:18 \
+              sh -c "cd /app && npm install && node server.js" 
