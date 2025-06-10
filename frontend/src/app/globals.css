@@ -294,8 +294,10 @@ h1 {
   .memo-actions button {
     flex: 1 1 0;
     min-width: 0;
-    font-size: 1rem;
-    padding: 10px 0;
+    font-size: 0.95rem;
+    padding: 7px 0;
+    height: 38px;
+    box-sizing: border-box;
   }
   .memo-item {
     padding: 12px;

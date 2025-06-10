@@ -99,6 +99,13 @@ export default function MemoList() {
           ))
         )}
       </div>
+      <div className="collection-info">
+        <small>
+          <div>앱 타입: {typeof window !== 'undefined' && (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) ? 'PWA' : 'Web'}</div>
+          <div>운영체제: {typeof window !== 'undefined' ? window.navigator.platform : ''}</div>
+          <div>User Agent: {typeof window !== 'undefined' ? window.navigator.userAgent : ''}</div>
+        </small>
+      </div>
     </div>
   )
 } 
