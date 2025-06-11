@@ -1,6 +1,7 @@
 'use client';
 
 import Script from 'next/script';
+import { APP_VERSION } from '../version';
 
 // GA 타입 선언
 declare global {
@@ -58,6 +59,16 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
             app_type: isPWA ? 'PWA' : 'Web',
             user_agent: navigator.userAgent
           });
+
+          // GA 이벤트 전송
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'app_type_detection', {
+              'app_type': isPWA ? 'mobile_app' : 'desktop_web',
+              'operating_system': os,
+              'user_agent': navigator.userAgent,
+              'app_version': APP_VERSION
+            });
+          }
         `}
       </Script>
     </>
