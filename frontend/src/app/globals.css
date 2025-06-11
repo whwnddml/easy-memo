@@ -197,21 +197,26 @@ h1 {
 .memo-date {
   color: #888;
   font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 
 .memo-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: flex-end;
+  margin-left: 12px;
 }
 
 .memo-actions button {
-  min-width: 90px;
-  max-width: 120px;
-  width: 90px;
-  font-size: 1rem;
-  padding: 7px 0;
-  height: 38px;
+  min-width: 60px;
+  max-width: 80px;
+  width: 70px;
+  font-size: 0.9rem;
+  padding: 6px 8px;
+  height: 32px;
   box-sizing: border-box;
 }
 
@@ -237,8 +242,8 @@ h1 {
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 7px 18px;
-  font-size: 1rem;
+  padding: 6px 8px;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -298,16 +303,11 @@ h1 {
 
 @media (max-width: 600px) {
   .memo-date {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
+    font-size: 0.85rem;
   }
   
   .memo-actions {
-    flex-direction: row;
     gap: 6px;
-    justify-content: flex-end;
     margin-left: 8px;
   }
   
@@ -315,10 +315,9 @@ h1 {
     min-width: 50px;
     max-width: 60px;
     width: 55px;
-    font-size: 0.85rem;
-    padding: 6px 4px;
-    height: 32px;
-    box-sizing: border-box;
+    font-size: 0.8rem;
+    padding: 5px 4px;
+    height: 30px;
   }
   
   .memo-item {
@@ -430,8 +429,8 @@ h1 {
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 7px 18px;
-  font-size: 1rem;
+  padding: 6px 8px;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
