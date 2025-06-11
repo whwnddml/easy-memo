@@ -142,11 +142,11 @@ app.get('/api/memos', async (req, res, next) => {
 // 메모 생성 (email → userId 자동 발급)
 app.post('/api/memos', async (req, res, next) => {
   try {
-    const { email, userId, content } = req.body;
-    if (!content || content.trim() === '') {
-      return res.status(400).json({ message: '메모 내용은 필수입니다' });
-    }
-    let finalUserId = userId;
+    // userId를 body 또는 query에서 모두 허용
+    const userIdFromBody = req.body.userId;
+    const userIdFromQuery = req.query.userId;
+    const { email, content } = req.body;
+    let finalUserId = userIdFromBody || userIdFromQuery;
     // userId가 없고 email이 있으면 userId 발급
     if (!finalUserId && email) {
       let user = await User.findOne({ email });
@@ -154,6 +154,9 @@ app.post('/api/memos', async (req, res, next) => {
         user = await User.create({ email });
       }
       finalUserId = user._id;
+    }
+    if (!content || content.trim() === '') {
+      return res.status(400).json({ message: '메모 내용은 필수입니다' });
     }
     if (!finalUserId) {
       return res.status(400).json({ message: 'userId 또는 email이 필요합니다' });
