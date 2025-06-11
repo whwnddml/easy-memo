@@ -1,7 +1,12 @@
 'use client';
 
 import Script from 'next/script';
-import { APP_VERSION } from '../version';
+let APP_VERSION = 'unknown';
+try {
+  APP_VERSION = require('../version').APP_VERSION || 'unknown';
+} catch (e) {
+  // ignore
+}
 
 // GA 타입 선언
 declare global {

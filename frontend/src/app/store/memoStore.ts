@@ -305,16 +305,19 @@ export const useMemoStore = create<MemoStore>()(
             const serverMemo = await response.json()
 
             set((state) => ({
-              memos: state.memos.map((m) =>
-                m.id === memo.id
-                  ? {
-                      ...m,
-                      id: serverMemo.id,
-                      isOffline: false,
-                      syncStatus: 'synced',
-                    }
-                  : m
-              ),
+              memos: [
+                // 서버에서 받은 메모를 추가
+                {
+                  _id: serverMemo._id,
+                  id: serverMemo._id,
+                  content: serverMemo.content,
+                  createdAt: serverMemo.createdAt,
+                  isOffline: false,
+                  syncStatus: 'synced'
+                },
+                // 기존 오프라인 메모(id가 다르면 유지)
+                ...state.memos.filter((m) => m.id !== memo.id)
+              ]
             }))
           } catch (error) {
             console.error('오프라인 메모 동기화 실패:', error)
