@@ -26,6 +26,20 @@ interface MemoStore {
 
 const API_URL = 'https://junny.dyndns.org:3008/api'
 
+// 임시 userId (로그인 기능 전까지)
+const DEFAULT_USER_ID = '665f1c000000000000000000'; // 실제 발급된 ObjectId로 교체 필요
+const USER_ID_KEY = 'easymemo_userId';
+
+function getUserId() {
+  if (typeof window === 'undefined') return DEFAULT_USER_ID;
+  let userId = localStorage.getItem(USER_ID_KEY);
+  if (!userId) {
+    userId = DEFAULT_USER_ID;
+    localStorage.setItem(USER_ID_KEY, userId);
+  }
+  return userId;
+}
+
 const checkServerConnection = async () => {
   try {
     console.log('서버 연결 상태 확인 중...');
@@ -57,7 +71,7 @@ export const useMemoStore = create<MemoStore>()(
       fetchMemos: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_URL}/memos`, {
+          const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
             headers: {
               'Accept': 'application/json'
             },
@@ -129,7 +143,7 @@ export const useMemoStore = create<MemoStore>()(
           if (isOnline) {
             try {
               console.log('서버에 메모 저장 시도');
-              const response = await fetch(`${API_URL}/memos`, {
+              const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -183,7 +197,7 @@ export const useMemoStore = create<MemoStore>()(
           // 온라인 상태이고 서버에 저장된 메모인 경우에만 서버 요청
           if (isOnline && memo._id && !memo.isOffline) {
             console.log('서버에 메모 수정 요청:', memo._id);
-            const response = await fetch(`${API_URL}/memos/${memo._id}`, {
+            const response = await fetch(`${API_URL}/memos/${memo._id}?userId=${getUserId()}`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
@@ -235,7 +249,7 @@ export const useMemoStore = create<MemoStore>()(
           // 온라인 상태이고 서버에 저장된 메모인 경우에만 서버 요청
           if (isOnline && memo._id && !memo.isOffline) {
             console.log('서버에 메모 삭제 요청:', memo._id);
-            const response = await fetch(`${API_URL}/memos/${memo._id}`, {
+            const response = await fetch(`${API_URL}/memos/${memo._id}?userId=${getUserId()}`, {
               method: 'DELETE',
               headers: {
                 'Accept': 'application/json'
@@ -276,7 +290,7 @@ export const useMemoStore = create<MemoStore>()(
 
         for (const memo of offlineMemos) {
           try {
-            const response = await fetch(`${API_URL}/memos`, {
+            const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
