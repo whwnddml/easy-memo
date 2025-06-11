@@ -6,9 +6,7 @@ on:
       - main
     paths:
       - 'frontend/**'
-      - 'frontend/package.json'
-      - 'frontend/package-lock.json'
-      - '.github/workflows/deploy-frontend.yml'  
+      - '.github/workflows/deploy-frontend.yml'
 
 permissions:
   contents: write
@@ -35,12 +33,9 @@ jobs:
       - name: Build
         run: |
           cd frontend
-          rm -rf out
           npm run build
           touch out/.nojekyll
-          echo "easy-memo.whwnddml.github.io" > out/CNAME
-          cp out/index.html out/404.html
-          ls -la out/
+          echo "whwnddml.github.io/easy-memo" > out/CNAME
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4

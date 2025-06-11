@@ -23,25 +23,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  trailingSlash: true,
   assetPrefix: process.env.NODE_ENV === 'production' ? '/easy-memo/' : '',
-  distDir: 'out',
   env: {
     NEXT_PUBLIC_BASE_PATH: '/easy-memo',
     NEXT_PUBLIC_APP_VERSION: appVersion,
-  },
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; img-src 'self' https://www.google-analytics.com; connect-src 'self' https://www.google-analytics.com;"
-          }
-        ]
-      }
-    ]
   }
 }
 
