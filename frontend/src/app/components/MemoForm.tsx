@@ -220,14 +220,6 @@ export default function MemoForm() {
           오프라인 상태입니다. 메모는 임시 저장되며, 인터넷 연결 시 자동 동기화됩니다.
         </div>
       )}
-      <div className="collection-info">
-        <small>
-          <div>앱 타입: {collectionInfo.appType}</div>
-          <div>운영체제: {collectionInfo.os} {collectionInfo.osVersion} ({collectionInfo.deviceModel})</div>
-          <div>브라우저: {collectionInfo.browser} {collectionInfo.browserVersion}</div>
-          <div>User Agent: {collectionInfo.userAgent}</div>
-        </small>
-      </div>
     </form>
   )
 } 
