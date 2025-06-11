@@ -297,20 +297,30 @@ h1 {
 }
 
 @media (max-width: 600px) {
+  .memo-date {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+  
   .memo-actions {
     flex-direction: row;
-    gap: 8px;
+    gap: 6px;
     justify-content: flex-end;
+    margin-left: 8px;
   }
+  
   .memo-actions button {
-    min-width: 80px;
-    max-width: 120px;
-    width: 90px;
-    font-size: 0.95rem;
-    padding: 7px 0;
-    height: 38px;
+    min-width: 50px;
+    max-width: 60px;
+    width: 55px;
+    font-size: 0.85rem;
+    padding: 6px 4px;
+    height: 32px;
     box-sizing: border-box;
   }
+  
   .memo-item {
     padding: 12px;
   }
