@@ -83,15 +83,20 @@ const useMemoStore = create<MemoStore>((set) => ({
   fetchMemos: async () => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos`);
+      const response = await fetch(`${API_URL}/memos?userId=user123`);
+      if (!response.ok) {
+        throw new Error('메모 목록을 불러오는데 실패했습니다.');
+      }
       const data = await response.json();
-      set({ memos: data.map((memo: any) => ({
-        id: memo._id,
-        content: memo.content,
-        userId: memo.userId || 'user123',
-        createdAt: memo.createdAt,
-        isOffline: false
-      })) });
+      set({ 
+        memos: data.map((memo: any) => ({
+          id: memo._id || memo.id,
+          content: memo.content,
+          userId: memo.userId || 'user123',
+          createdAt: memo.createdAt || new Date().toISOString(),
+          isOffline: false
+        }))
+      });
     } catch (error) {
       console.error('메모 목록 조회 중 오류:', error);
       alert('메모 목록을 불러오는데 실패했습니다.');
@@ -108,15 +113,21 @@ const useMemoStore = create<MemoStore>((set) => ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(memo),
+        body: JSON.stringify({
+          ...memo,
+          userId: 'user123'
+        }),
       });
+      if (!response.ok) {
+        throw new Error('메모 추가에 실패했습니다.');
+      }
       const newMemo = await response.json();
       set((state) => ({
         memos: [...state.memos, {
-          id: newMemo._id,
+          id: newMemo._id || newMemo.id,
           content: newMemo.content,
-          userId: newMemo.userId,
-          createdAt: newMemo.createdAt,
+          userId: newMemo.userId || 'user123',
+          createdAt: newMemo.createdAt || new Date().toISOString(),
           isOffline: false
         }],
       }));
@@ -136,17 +147,23 @@ const useMemoStore = create<MemoStore>((set) => ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(memo),
+        body: JSON.stringify({
+          ...memo,
+          userId: 'user123'
+        }),
       });
+      if (!response.ok) {
+        throw new Error('메모 수정에 실패했습니다.');
+      }
       const updatedMemo = await response.json();
       set((state) => ({
         memos: state.memos.map((m) => 
           m.id === memo.id 
             ? {
-                id: updatedMemo._id,
+                id: updatedMemo._id || updatedMemo.id,
                 content: updatedMemo.content,
-                userId: updatedMemo.userId,
-                createdAt: updatedMemo.createdAt,
+                userId: updatedMemo.userId || 'user123',
+                createdAt: updatedMemo.createdAt || new Date().toISOString(),
                 isOffline: false
               }
             : m
@@ -163,9 +180,12 @@ const useMemoStore = create<MemoStore>((set) => ({
   deleteMemo: async (id) => {
     set({ isLoading: true });
     try {
-      await fetch(`${API_URL}/memos/${id}`, {
+      const response = await fetch(`${API_URL}/memos/${id}?userId=user123`, {
         method: 'DELETE',
       });
+      if (!response.ok) {
+        throw new Error('메모 삭제에 실패했습니다.');
+      }
       set((state) => ({
         memos: state.memos.filter((memo) => memo.id !== id),
       }));
