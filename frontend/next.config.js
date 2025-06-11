@@ -19,12 +19,12 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   output: 'export',
-  basePath: '/easy-memo',
+  basePath: process.env.NODE_ENV === 'production' ? '/easy-memo' : '',
   images: {
     unoptimized: true,
   },
   trailingSlash: true,
-  assetPrefix: '/easy-memo/',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/easy-memo/' : '',
   distDir: 'out',
   env: {
     NEXT_PUBLIC_BASE_PATH: '/easy-memo',
