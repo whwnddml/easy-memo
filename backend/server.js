@@ -66,8 +66,16 @@ const connectDB = async () => {
 // 초기 MongoDB 연결
 connectDB();
 
+// 유저 스키마 및 모델
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  createdAt: { type: Date, default: Date.now, required: true }
+});
+const User = mongoose.model('User', userSchema);
+
 // 메모 스키마 정의
 const memoSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   content: { 
     type: String, 
     required: [true, '메모 내용은 필수입니다'] 
@@ -117,10 +125,12 @@ app.head('/api/memos', (req, res) => {
   }
 });
 
-// 메모 목록 조회
+// 메모 목록 조회 (userId 기반)
 app.get('/api/memos', async (req, res, next) => {
   try {
-    const memos = await Memo.find()
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: 'userId는 필수입니다' });
+    const memos = await Memo.find({ userId })
       .sort({ createdAt: -1 })
       .select('content createdAt updatedAt');
     res.json(memos);
@@ -129,17 +139,29 @@ app.get('/api/memos', async (req, res, next) => {
   }
 });
 
-// 메모 생성
+// 메모 생성 (email → userId 자동 발급)
 app.post('/api/memos', async (req, res, next) => {
   try {
-    if (!req.body.content || req.body.content.trim() === '') {
+    const { email, userId, content } = req.body;
+    if (!content || content.trim() === '') {
       return res.status(400).json({ message: '메모 내용은 필수입니다' });
     }
-
+    let finalUserId = userId;
+    // userId가 없고 email이 있으면 userId 발급
+    if (!finalUserId && email) {
+      let user = await User.findOne({ email });
+      if (!user) {
+        user = await User.create({ email });
+      }
+      finalUserId = user._id;
+    }
+    if (!finalUserId) {
+      return res.status(400).json({ message: 'userId 또는 email이 필요합니다' });
+    }
     const memo = new Memo({
-      content: req.body.content.trim()
+      userId: finalUserId,
+      content: content.trim()
     });
-    
     const savedMemo = await memo.save();
     res.status(201).json(savedMemo);
   } catch (error) {
@@ -147,61 +169,45 @@ app.post('/api/memos', async (req, res, next) => {
   }
 });
 
-// 메모 삭제
+// 메모 삭제 (userId 체크)
 app.delete('/api/memos/:id', async (req, res, next) => {
   try {
+    const { userId } = req.query;
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: '잘못된 메모 ID입니다' });
     }
-
-    const deletedMemo = await Memo.findByIdAndDelete(req.params.id);
+    if (!userId) return res.status(400).json({ message: 'userId는 필수입니다' });
+    const deletedMemo = await Memo.findOneAndDelete({ _id: req.params.id, userId });
     if (!deletedMemo) {
       return res.status(404).json({ message: '메모를 찾을 수 없습니다' });
     }
-    
     res.status(204).send();
   } catch (error) {
     next(error);
   }
 });
 
-// 메모 수정
+// 메모 수정 (userId 체크)
 app.put('/api/memos/:id', async (req, res, next) => {
   try {
-    console.log('메모 수정 요청:', {
-      id: req.params.id,
-      content: req.body.content,
-      headers: req.headers
-    });
-
+    const { userId, content } = req.body;
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      console.log('잘못된 메모 ID:', req.params.id);
       return res.status(400).json({ message: '잘못된 메모 ID입니다' });
     }
-
-    if (!req.body.content || req.body.content.trim() === '') {
-      console.log('메모 내용 누락');
+    if (!userId) return res.status(400).json({ message: 'userId는 필수입니다' });
+    if (!content || content.trim() === '') {
       return res.status(400).json({ message: '메모 내용은 필수입니다' });
     }
-
-    const updatedMemo = await Memo.findByIdAndUpdate(
-      req.params.id,
-      { 
-        content: req.body.content.trim(),
-        updatedAt: new Date()
-      },
+    const updatedMemo = await Memo.findOneAndUpdate(
+      { _id: req.params.id, userId },
+      { content: content.trim(), updatedAt: new Date() },
       { new: true, runValidators: true }
     );
-
     if (!updatedMemo) {
-      console.log('메모를 찾을 수 없음:', req.params.id);
       return res.status(404).json({ message: '메모를 찾을 수 없습니다' });
     }
-
-    console.log('메모 수정 성공:', updatedMemo);
     res.json(updatedMemo);
   } catch (error) {
-    console.error('메모 수정 중 오류:', error);
     next(error);
   }
 });
