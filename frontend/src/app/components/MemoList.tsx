@@ -237,17 +237,23 @@ export default function MemoList() {
     setEditContent(memo.content)
   }, [])
 
-  const handleSave = useCallback(async (id: string) => {
-    if (!isHydrated) return
+  const handleSave = useCallback(async (memoId: string) => {
+    if (!editContent.trim()) return;
+    
     try {
-      await updateMemo(id, editContent)
-      setEditingId(null)
-      setEditContent('')
+      await updateMemo({
+        id: memoId,
+        content: editContent,
+        userId: 'user123', // 임시 userId 추가
+        createdAt: new Date().toISOString()
+      });
+      setEditingId(null);
+      setEditContent('');
     } catch (error) {
-      console.error('메모 수정 중 오류:', error)
-      alert('메모 수정 중 오류가 발생했습니다.')
+      console.error('메모 수정 중 오류 발생:', error);
+      alert('메모 수정에 실패했습니다. 다시 시도해주세요.');
     }
-  }, [updateMemo, editContent, isHydrated])
+  }, [editContent, updateMemo]);
 
   const handleCancel = useCallback(() => {
     setEditingId(null)
