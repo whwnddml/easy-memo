@@ -111,12 +111,68 @@ export const useMemoStore = create<MemoStore>()(
 
       checkOnlineStatus: async () => {
         console.log('온라인 상태 체크 시작');
-        const isConnected = await checkServerConnection();
-        console.log('온라인 상태:', isConnected);
-        set({ isOnline: isConnected });
-        if (isConnected) {
-          get().fetchMemos();
-          get().syncOfflineMemos();
+        try {
+          const isConnected = await checkServerConnection();
+          console.log('온라인 상태:', isConnected);
+          
+          if (isConnected) {
+            // 모든 상태 업데이트를 한 번에 처리
+            set((state) => ({ 
+              ...state,
+              isOnline: true,
+              isLoading: true 
+            }));
+            
+            // 비동기 작업 수행
+            try {
+              const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
+                headers: {
+                  'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'include'
+              });
+
+              if (!response.ok) {
+                throw new Error('메모 목록 가져오기 실패');
+              }
+
+              const memos = await response.json();
+              const formattedMemos = memos.map((memo: any) => ({
+                _id: memo._id,
+                id: memo._id,
+                content: memo.content,
+                createdAt: memo.createdAt,
+                isOffline: false,
+                syncStatus: 'synced'
+              }));
+
+              set((state) => ({ 
+                ...state,
+                memos: formattedMemos,
+                isLoading: false,
+                error: null
+              }));
+
+              // 오프라인 메모 동기화
+              const store = get();
+              await store.syncOfflineMemos();
+            } catch (error) {
+              set((state) => ({
+                ...state,
+                error: error instanceof Error ? error.message : '메모 목록 가져오기 중 오류가 발생했습니다',
+                isLoading: false
+              }));
+            }
+          } else {
+            set({ isOnline: false });
+          }
+        } catch (error) {
+          console.error('온라인 상태 체크 오류:', error);
+          set({ 
+            isOnline: false,
+            error: '서버 연결 상태를 확인할 수 없습니다.'
+          });
         }
       },
 

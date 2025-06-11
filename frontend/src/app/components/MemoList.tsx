@@ -54,8 +54,11 @@ export default function MemoList() {
   const [editContent, setEditContent] = useState('')
 
   useEffect(() => {
-    fetchMemos()
-  }, [fetchMemos])
+    // 컴포넌트 마운트 시 한 번만 실행
+    if (typeof window !== 'undefined') {
+      fetchMemos()
+    }
+  }, []) // 의존성 배열을 비워서 초기 로딩 시에만 실행
 
   const handleEdit = (memo: { _id?: string; id: string; content: string }) => {
     setEditingId(memo._id || memo.id)
