@@ -1,7 +1,6 @@
 'use client';
 
 import Script from 'next/script';
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '2024.06.11-DEV1';
 
 // GA 타입 선언
 declare global {
@@ -65,8 +64,7 @@ export default function GoogleAnalytics({ GA_MEASUREMENT_ID }: { GA_MEASUREMENT_
             window.gtag('event', 'app_type_detection', {
               'app_type': isPWA ? 'mobile_app' : 'desktop_web',
               'operating_system': os,
-              'user_agent': navigator.userAgent,
-              'app_version': APP_VERSION
+              'user_agent': navigator.userAgent
             });
           }
         `}
