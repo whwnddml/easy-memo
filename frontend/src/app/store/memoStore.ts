@@ -132,13 +132,13 @@ const useMemoStore = create<MemoStore>((set) => ({
       }
       const newMemo = await response.json();
       set((state) => ({
-        memos: [...state.memos, {
+        memos: [{
           id: newMemo._id,
           content: newMemo.content,
           userId: newMemo.userId || getUserId(),
           createdAt: newMemo.createdAt,
           isOffline: false
-        }],
+        }, ...state.memos],
       }));
     } catch (error) {
       console.error('메모 추가 중 오류:', error);
