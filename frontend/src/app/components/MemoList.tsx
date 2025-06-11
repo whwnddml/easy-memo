@@ -233,9 +233,9 @@ export default function MemoList() {
   }, [])
 
   const handleEdit = useCallback((memo: { id: string; content: string }) => {
-    setEditingId(memo.id)
-    setEditContent(memo.content)
-  }, [])
+    setEditingId(memo.id);
+    setEditContent(memo.content);
+  }, []);
 
   const handleSave = useCallback(async (memoId: string) => {
     if (!editContent.trim()) return;
@@ -244,21 +244,21 @@ export default function MemoList() {
       await updateMemo({
         id: memoId,
         content: editContent,
-        userId: 'user123', // 임시 userId 추가
+        userId: 'user123',
         createdAt: new Date().toISOString()
       });
       setEditingId(null);
       setEditContent('');
     } catch (error) {
-      console.error('메모 수정 중 오류 발생:', error);
-      alert('메모 수정에 실패했습니다. 다시 시도해주세요.');
+      console.error('메모 수정 중 오류:', error);
+      alert('메모 수정에 실패했습니다.');
     }
   }, [editContent, updateMemo]);
 
   const handleCancel = useCallback(() => {
-    setEditingId(null)
-    setEditContent('')
-  }, [])
+    setEditingId(null);
+    setEditContent('');
+  }, []);
 
   if (!isHydrated) {
     return <div className="loading">로딩 중...</div>
