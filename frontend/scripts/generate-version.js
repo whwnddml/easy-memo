@@ -21,4 +21,9 @@ export const APP_VERSION = '${version}';
 
 const targetPath = path.join(__dirname, '../src/app/version.ts');
 fs.writeFileSync(targetPath, content);
-console.log(`version.ts generated: ${version}`); 
+console.log(`version.ts generated: ${version}`);
+
+const envPath = path.join(__dirname, '../.env');
+const envLine = `NEXT_PUBLIC_APP_VERSION=${version}\n`;
+fs.writeFileSync(envPath, envLine, { flag: 'a' });
+console.log(`.env updated: NEXT_PUBLIC_APP_VERSION=${version}`); 
