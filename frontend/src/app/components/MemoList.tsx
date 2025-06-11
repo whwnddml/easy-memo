@@ -7,77 +7,65 @@ import { FaEdit, FaTrash } from 'react-icons/fa'
 // 모바일 환경 감지 함수
 const isMobile = () => {
   if (typeof window === 'undefined') return false;
-  return window.innerWidth <= 600;
+  return window.matchMedia('(max-width: 768px)').matches;
 };
 
 // 운영체제 이름/버전/플랫폼 추출 함수
-function getOSInfo() {
-  if (typeof window === 'undefined') return '';
-  const userAgent = window.navigator.userAgent;
-  const platform = window.navigator.platform;
-  let os = 'unknown';
-  let osVersion = '';
-
-  if (/android/i.test(userAgent)) {
-    os = 'Android';
-    const match = userAgent.match(/Android\s([0-9\.]+)/i);
-    if (match) osVersion = match[1];
-  } else if (/iphone|ipad|ipod/i.test(userAgent)) {
-    os = 'iOS';
-    const match = userAgent.match(/OS\s([0-9_]+)/i);
-    if (match) osVersion = match[1].replace(/_/g, '.');
-  } else if (/windows nt/i.test(userAgent)) {
-    os = 'Windows';
-    const match = userAgent.match(/Windows NT ([0-9\.]+)/i);
-    if (match) {
-      const v = match[1];
-      osVersion = {
-        '10.0': '10',
-        '6.3': '8.1',
-        '6.2': '8',
-        '6.1': '7',
-      }[v] || v;
-    }
-  } else if (/macintosh|mac os x/i.test(userAgent)) {
-    os = 'MacOS';
-    const match = userAgent.match(/Mac OS X ([0-9_]+)/i);
-    if (match) osVersion = match[1].replace(/_/g, '.');
-  } else if (/linux/i.test(userAgent)) {
-    os = 'Linux';
-  }
-  return `${os}${osVersion ? ' ' + osVersion : ''} (${platform})`;
-}
+const getOSInfo = () => {
+  if (typeof window === 'undefined') return 'unknown';
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  
+  if (userAgent.includes('win')) return 'Windows';
+  if (userAgent.includes('mac')) return 'macOS';
+  if (userAgent.includes('linux')) return 'Linux';
+  if (userAgent.includes('android')) return 'Android';
+  if (userAgent.includes('ios') || userAgent.includes('iphone') || userAgent.includes('ipad')) return 'iOS';
+  
+  return 'unknown';
+};
 
 export default function MemoList() {
-  const { memos, deleteMemo, updateMemo, fetchMemos, isLoading } = useMemoStore()
+  const { memos, deleteMemo, updateMemo, fetchMemos, isLoading, isHydrated } = useMemoStore()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
 
   const initializeMemos = useCallback(async () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && isHydrated) {
       await fetchMemos()
     }
-  }, [fetchMemos])
+  }, [fetchMemos, isHydrated])
 
   useEffect(() => {
-    initializeMemos()
-  }, [initializeMemos])
+    if (isHydrated) {
+      initializeMemos()
+    }
+  }, [initializeMemos, isHydrated])
 
-  const handleEdit = useCallback((memo: { _id?: string; id: string; content: string }) => {
-    setEditingId(memo._id || memo.id)
+  const handleEdit = useCallback((memo: { id: string; content: string }) => {
+    setEditingId(memo.id)
     setEditContent(memo.content)
   }, [])
 
   const handleSave = useCallback(async (id: string) => {
-    await updateMemo(id, editContent)
-    setEditingId(null)
-    setEditContent('')
-  }, [updateMemo, editContent])
+    if (!isHydrated) return
+    try {
+      await updateMemo(id, editContent)
+      setEditingId(null)
+      setEditContent('')
+    } catch (error) {
+      console.error('메모 수정 중 오류:', error)
+      alert('메모 수정 중 오류가 발생했습니다.')
+    }
+  }, [updateMemo, editContent, isHydrated])
 
   const handleCancel = useCallback(() => {
     setEditingId(null)
     setEditContent('')
   }, [])
+
+  if (!isHydrated) {
+    return <div className="loading">로딩 중...</div>
+  }
 
   return (
     <div className="memo-list-container">
@@ -92,8 +80,8 @@ export default function MemoList() {
           </div>
         ) : (
           memos.map((memo) => (
-            <div key={memo._id || memo.id} className="memo-item">
-              {editingId === (memo._id || memo.id) ? (
+            <div key={memo.id} className="memo-item">
+              {editingId === memo.id ? (
                 <div className="memo-edit">
                   <textarea
                     value={editContent}
@@ -103,7 +91,7 @@ export default function MemoList() {
                   <div className="edit-buttons">
                     <button 
                       className="save-btn"
-                      onClick={() => handleSave(memo._id || memo.id)}
+                      onClick={() => handleSave(memo.id)}
                       disabled={!editContent.trim() || isLoading}
                     >
                       저장
@@ -139,7 +127,7 @@ export default function MemoList() {
                           className="delete-btn"
                           onClick={() => {
                             if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
-                              deleteMemo(memo._id || memo.id)
+                              deleteMemo(memo.id)
                             }
                           }}
                           disabled={isLoading}
@@ -161,7 +149,7 @@ export default function MemoList() {
                           className="delete-btn"
                           onClick={() => {
                             if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
-                              deleteMemo(memo._id || memo.id)
+                              deleteMemo(memo.id)
                             }
                           }}
                           disabled={isLoading}

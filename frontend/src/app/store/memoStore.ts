@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface Memo {
   _id?: string  // MongoDB의 _id
-  id: string    // 로컬 ID
+  id: string    // 로컬 ID (UUID)
   content: string
   createdAt: string
   isOffline?: boolean
@@ -15,6 +15,7 @@ interface MemoStore {
   isLoading: boolean
   isOnline: boolean
   error: string | null
+  isHydrated: boolean
   fetchMemos: () => Promise<void>
   addMemo: (content: string) => Promise<void>
   updateMemo: (id: string, content: string) => Promise<void>
@@ -22,45 +23,63 @@ interface MemoStore {
   syncOfflineMemos: () => Promise<void>
   setOnlineStatus: (status: boolean) => void
   checkOnlineStatus: () => Promise<void>
+  setHydrated: () => void
 }
 
 const API_URL = 'https://junny.dyndns.org:3008/api'
 
 // 임시 userId (로그인 기능 전까지)
-const DEFAULT_USER_ID = '665f1c000000000000000000'; // 실제 발급된 ObjectId로 교체 필요
-const USER_ID_KEY = 'easymemo_userId';
+const DEFAULT_USER_ID = '665f1c000000000000000000'
+const USER_ID_KEY = 'easymemo_userId'
 
-let cachedUserId = DEFAULT_USER_ID;
+let cachedUserId = DEFAULT_USER_ID
 if (typeof window !== 'undefined') {
-  let userId = localStorage.getItem(USER_ID_KEY);
+  let userId = localStorage.getItem(USER_ID_KEY)
   if (!userId) {
-    userId = DEFAULT_USER_ID;
-    localStorage.setItem(USER_ID_KEY, userId);
+    userId = DEFAULT_USER_ID
+    localStorage.setItem(USER_ID_KEY, userId)
   }
-  cachedUserId = userId;
+  cachedUserId = userId
 }
 
 function getUserId() {
-  return cachedUserId;
+  return cachedUserId
 }
 
-const checkServerConnection = async () => {
+// UUID v4 생성 함수
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// 서버 연결 상태 체크 함수
+async function checkServerConnection(): Promise<boolean> {
   try {
-    console.log('서버 연결 상태 확인 중...');
-    const response = await fetch(`${API_URL}/memos`, {
-      method: 'HEAD',
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, 5000)  // 5초 타임아웃
+    
+    const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
+      signal: controller.signal,
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        'Accept': 'application/json'
       },
       mode: 'cors',
       credentials: 'include'
-    });
-    console.log('서버 응답:', response.status, response.ok);
-    return response.ok;
+    })
+    
+    clearTimeout(timeoutId)
+    return response.ok
   } catch (error) {
-    console.error('서버 연결 확인 실패:', error);
-    return false;
+    console.error('서버 연결 체크 오류:', error)
+    return false
   }
 }
 
@@ -71,9 +90,15 @@ export const useMemoStore = create<MemoStore>()(
       isLoading: false,
       isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
       error: null,
+      isHydrated: false,
+
+      setHydrated: () => set({ isHydrated: true }),
 
       fetchMemos: async () => {
-        set({ isLoading: true, error: null });
+        const state = get()
+        if (!state.isHydrated || state.isLoading) return
+
+        set({ isLoading: true, error: null })
         try {
           const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
             headers: {
@@ -81,49 +106,50 @@ export const useMemoStore = create<MemoStore>()(
             },
             mode: 'cors',
             credentials: 'include'
-          });
+          })
 
           if (!response.ok) {
-            throw new Error('메모 목록 가져오기 실패');
+            throw new Error('메모 목록 가져오기 실패')
           }
 
-          const memos = await response.json();
-          // 서버에서 받은 메모 데이터 구조 확인 및 변환
+          const memos = await response.json()
           const formattedMemos = memos.map((memo: any) => ({
-            _id: memo._id, // MongoDB ID
-            id: memo._id,  // 호환성을 위해 id도 설정
+            _id: memo._id,
+            id: memo._id,  // 서버 메모는 _id를 id로도 사용
             content: memo.content,
             createdAt: memo.createdAt,
             isOffline: false,
             syncStatus: 'synced'
-          }));
+          }))
           
-          console.log('서버에서 받은 메모:', formattedMemos);
-          set({ memos: formattedMemos, isLoading: false });
+          // 오프라인 메모와 서버 메모 병합
+          const offlineMemos = state.memos.filter(memo => 
+            memo.isOffline || memo.syncStatus === 'failed' || memo.syncStatus === 'pending'
+          )
+          
+          set({ 
+            memos: [...formattedMemos, ...offlineMemos],
+            isLoading: false 
+          })
         } catch (error) {
-          console.error('메모 목록 가져오기 오류:', error);
+          console.error('메모 목록 가져오기 오류:', error)
           set({ 
             error: error instanceof Error ? error.message : '메모 목록 가져오기 중 오류가 발생했습니다',
             isLoading: false 
-          });
+          })
         }
       },
 
       checkOnlineStatus: async () => {
-        console.log('온라인 상태 체크 시작');
+        const state = get()
+        if (!state.isHydrated) return
+        
         try {
-          const isConnected = await checkServerConnection();
-          console.log('온라인 상태:', isConnected);
+          const isConnected = await checkServerConnection()
           
           if (isConnected) {
-            // 모든 상태 업데이트를 한 번에 처리
-            set((state) => ({ 
-              ...state,
-              isOnline: true,
-              isLoading: true 
-            }));
+            set({ isOnline: true, isLoading: true })
             
-            // 비동기 작업 수행
             try {
               const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
                 headers: {
@@ -131,13 +157,13 @@ export const useMemoStore = create<MemoStore>()(
                 },
                 mode: 'cors',
                 credentials: 'include'
-              });
+              })
 
               if (!response.ok) {
-                throw new Error('메모 목록 가져오기 실패');
+                throw new Error('메모 목록 가져오기 실패')
               }
 
-              const memos = await response.json();
+              const memos = await response.json()
               const formattedMemos = memos.map((memo: any) => ({
                 _id: memo._id,
                 id: memo._id,
@@ -145,64 +171,68 @@ export const useMemoStore = create<MemoStore>()(
                 createdAt: memo.createdAt,
                 isOffline: false,
                 syncStatus: 'synced'
-              }));
+              }))
 
-              set((state) => ({ 
-                ...state,
-                memos: formattedMemos,
+              // 오프라인 메모와 서버 메모 병합
+              const offlineMemos = state.memos.filter(memo => 
+                memo.isOffline || memo.syncStatus === 'failed' || memo.syncStatus === 'pending'
+              )
+
+              set({ 
+                memos: [...formattedMemos, ...offlineMemos],
                 isLoading: false,
                 error: null
-              }));
+              })
 
-              // 오프라인 메모 동기화
-              const store = get();
-              await store.syncOfflineMemos();
+              await get().syncOfflineMemos()
             } catch (error) {
-              set((state) => ({
-                ...state,
+              set({
                 error: error instanceof Error ? error.message : '메모 목록 가져오기 중 오류가 발생했습니다',
                 isLoading: false
-              }));
+              })
             }
           } else {
-            set({ isOnline: false });
+            set({ isOnline: false })
           }
         } catch (error) {
-          console.error('온라인 상태 체크 오류:', error);
+          console.error('온라인 상태 체크 오류:', error)
           set({ 
             isOnline: false,
             error: '서버 연결 상태를 확인할 수 없습니다.'
-          });
+          })
         }
       },
 
       setOnlineStatus: (status: boolean) => {
-        console.log('브라우저 온라인 상태 변경:', status);
+        const state = get()
+        if (!state.isHydrated) return
+        
         if (status) {
-          get().checkOnlineStatus();
+          get().checkOnlineStatus()
         } else {
-          set({ isOnline: false });
+          set({ isOnline: false })
         }
       },
 
       addMemo: async (content: string) => {
-        set({ isLoading: true, error: null });
-        await get().checkOnlineStatus();
-        const { isOnline } = get();
-        console.log('메모 추가 시 온라인 상태:', isOnline);
+        const state = get()
+        if (!state.isHydrated || !content.trim()) return
+
+        set({ isLoading: true, error: null })
+        await get().checkOnlineStatus()
+        const { isOnline } = get()
         
         try {
           const newMemo: Memo = {
-            id: Date.now().toString(),
+            id: generateUUID(),  // UUID 사용
             content,
             createdAt: new Date().toISOString(),
             isOffline: !isOnline,
             syncStatus: isOnline ? 'synced' : 'pending'
-          };
+          }
 
           if (isOnline) {
             try {
-              console.log('서버에 메모 저장 시도');
               const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
                 method: 'POST',
                 headers: {
@@ -212,51 +242,50 @@ export const useMemoStore = create<MemoStore>()(
                 mode: 'cors',
                 credentials: 'include',
                 body: JSON.stringify({ content }),
-              });
+              })
 
               if (!response.ok) {
-                throw new Error('서버 응답 오류');
+                throw new Error('서버 응답 오류')
               }
 
-              const serverMemo = await response.json();
-              console.log('서버 응답 메모:', serverMemo);
-              newMemo.id = serverMemo.id;
-              newMemo.createdAt = serverMemo.createdAt;
+              const serverMemo = await response.json()
+              newMemo._id = serverMemo._id
+              newMemo.createdAt = serverMemo.createdAt
             } catch (error) {
-              console.error('메모 서버 저장 실패:', error);
-              newMemo.isOffline = true;
-              newMemo.syncStatus = 'failed';
+              console.error('메모 서버 저장 실패:', error)
+              newMemo.isOffline = true
+              newMemo.syncStatus = 'failed'
             }
           }
 
           set((state) => ({
             memos: [newMemo, ...state.memos],
             isLoading: false
-          }));
+          }))
         } catch (error) {
-          console.error('메모 추가 중 오류:', error);
+          console.error('메모 추가 중 오류:', error)
           set({ 
             error: error instanceof Error ? error.message : '메모 추가 중 오류가 발생했습니다',
             isLoading: false 
-          });
+          })
         }
       },
 
       updateMemo: async (id: string, content: string) => {
-        set({ isLoading: true, error: null });
-        const { isOnline, memos } = get();
+        const state = get()
+        if (!state.isHydrated || !content.trim()) return
+
+        set({ isLoading: true, error: null })
+        const { isOnline, memos } = get()
 
         try {
-          // 메모 찾기
-          const memo = memos.find(m => (m._id || m.id) === id);
+          const memo = memos.find(m => m.id === id)  // id로만 검색
           
           if (!memo) {
-            throw new Error('메모를 찾을 수 없습니다');
+            throw new Error('메모를 찾을 수 없습니다')
           }
 
-          // 온라인 상태이고 서버에 저장된 메모인 경우에만 서버 요청
           if (isOnline && memo._id && !memo.isOffline) {
-            console.log('서버에 메모 수정 요청:', memo._id);
             const response = await fetch(`${API_URL}/memos/${memo._id}?userId=${getUserId()}`, {
               method: 'PUT',
               headers: {
@@ -266,49 +295,46 @@ export const useMemoStore = create<MemoStore>()(
               mode: 'cors',
               credentials: 'include',
               body: JSON.stringify({ content, userId: getUserId() })
-            });
+            })
 
             if (!response.ok) {
-              throw new Error('서버 응답 오류');
+              throw new Error('서버 응답 오류')
             }
-            
-            console.log('메모 수정 성공:', memo._id);
           }
 
-          // 로컬 상태 업데이트
           set((state) => ({
             memos: state.memos.map((m) => 
-              (m._id || m.id) === id 
+              m.id === id  // id로만 비교
                 ? { ...m, content, isOffline: !isOnline, syncStatus: isOnline ? 'synced' : 'pending' }
                 : m
             ),
             isLoading: false
-          }));
+          }))
 
         } catch (error) {
-          console.error('메모 수정 중 오류:', error);
+          console.error('메모 수정 중 오류:', error)
           set({ 
             error: error instanceof Error ? error.message : '메모 수정 중 오류가 발생했습니다',
             isLoading: false 
-          });
+          })
         }
       },
 
       deleteMemo: async (id: string) => {
-        set({ isLoading: true, error: null });
-        const { isOnline, memos } = get();
+        const state = get()
+        if (!state.isHydrated) return
+
+        set({ isLoading: true, error: null })
+        const { isOnline, memos } = get()
 
         try {
-          // 메모 찾기
-          const memo = memos.find(m => (m._id || m.id) === id);
+          const memo = memos.find(m => m.id === id)  // id로만 검색
           
           if (!memo) {
-            throw new Error('메모를 찾을 수 없습니다');
+            throw new Error('메모를 찾을 수 없습니다')
           }
 
-          // 온라인 상태이고 서버에 저장된 메모인 경우에만 서버 요청
           if (isOnline && memo._id && !memo.isOffline) {
-            console.log('서버에 메모 삭제 요청:', memo._id);
             const response = await fetch(`${API_URL}/memos/${memo._id}?userId=${getUserId()}`, {
               method: 'DELETE',
               headers: {
@@ -316,35 +342,32 @@ export const useMemoStore = create<MemoStore>()(
               },
               mode: 'cors',
               credentials: 'include'
-            });
+            })
 
             if (!response.ok) {
-              throw new Error('서버 응답 오류');
+              throw new Error('서버 응답 오류')
             }
-            
-            console.log('메모 삭제 성공:', memo._id);
           }
 
-          // 로컬 상태 업데이트
           set((state) => ({
-            memos: state.memos.filter((m) => (m._id || m.id) !== id),
+            memos: state.memos.filter((m) => m.id !== id),  // id로만 필터링
             isLoading: false
-          }));
+          }))
 
         } catch (error) {
-          console.error('메모 삭제 중 오류:', error);
+          console.error('메모 삭제 중 오류:', error)
           set({ 
             error: error instanceof Error ? error.message : '메모 삭제 중 오류가 발생했습니다',
             isLoading: false 
-          });
+          })
         }
       },
 
       syncOfflineMemos: async () => {
-        const { memos, isOnline } = get()
-        if (!isOnline) return
+        const state = get()
+        if (!state.isHydrated || !state.isOnline) return
 
-        const offlineMemos = memos.filter(
+        const offlineMemos = state.memos.filter(
           (memo) => memo.isOffline || memo.syncStatus === 'failed' || memo.syncStatus === 'pending'
         )
 
@@ -354,7 +377,10 @@ export const useMemoStore = create<MemoStore>()(
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
               },
+              mode: 'cors',
+              credentials: 'include',
               body: JSON.stringify({ content: memo.content }),
             })
 
@@ -365,29 +391,28 @@ export const useMemoStore = create<MemoStore>()(
             const serverMemo = await response.json()
 
             set((state) => ({
-              memos: [
-                // 서버에서 받은 메모를 추가
-                {
-                  _id: serverMemo._id,
-                  id: serverMemo._id,
-                  content: serverMemo.content,
-                  createdAt: serverMemo.createdAt,
-                  isOffline: false,
-                  syncStatus: 'synced'
-                },
-                // 기존 오프라인 메모(id가 다르면 유지)
-                ...state.memos.filter((m) => m.id !== memo.id)
-              ]
+              memos: state.memos.map(m => 
+                m.id === memo.id
+                  ? {
+                      ...m,
+                      _id: serverMemo._id,
+                      createdAt: serverMemo.createdAt,
+                      isOffline: false,
+                      syncStatus: 'synced'
+                    }
+                  : m
+              )
             }))
           } catch (error) {
             console.error('오프라인 메모 동기화 실패:', error)
-            // 실패한 메모는 다음 동기화 시도를 위해 상태 업데이트
+            // 동기화 실패 시 해당 메모의 상태만 업데이트
             set((state) => ({
-              memos: state.memos.map((m) =>
+              memos: state.memos.map(m =>
                 m.id === memo.id
                   ? { ...m, syncStatus: 'failed' }
                   : m
               ),
+              error: `메모 동기화 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
             }))
           }
         }
