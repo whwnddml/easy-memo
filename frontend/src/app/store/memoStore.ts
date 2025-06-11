@@ -334,8 +334,7 @@ export const useMemoStore = create<MemoStore>()(
       }
     }),
     {
-      name: 'memo-storage',
-      skipHydration: true
+      name: 'memo-storage'
     }
   )
 ) 
