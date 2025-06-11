@@ -1,2 +1,2 @@
 // 자동 생성 파일 (빌드시)
-export const APP_VERSION = '2025.06.12-075606';
+export const APP_VERSION = '2025.06.12-084047';
