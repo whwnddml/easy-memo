@@ -9,6 +9,9 @@ export default function Home() {
   const { setOnlineStatus, checkOnlineStatus, error } = useMemoStore();
 
   useEffect(() => {
+    // store hydration
+    useMemoStore.persist.rehydrate();
+
     // 초기 온라인 상태 체크
     const checkInitialOnlineStatus = () => {
       const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;

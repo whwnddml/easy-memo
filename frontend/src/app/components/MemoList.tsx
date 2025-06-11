@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useMemoStore } from '../store/memoStore'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 
@@ -53,28 +53,31 @@ export default function MemoList() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
 
-  useEffect(() => {
-    // 컴포넌트 마운트 시 한 번만 실행
+  const initializeMemos = useCallback(async () => {
     if (typeof window !== 'undefined') {
-      fetchMemos()
+      await fetchMemos()
     }
-  }, []) // 의존성 배열을 비워서 초기 로딩 시에만 실행
+  }, [fetchMemos])
 
-  const handleEdit = (memo: { _id?: string; id: string; content: string }) => {
+  useEffect(() => {
+    initializeMemos()
+  }, [initializeMemos])
+
+  const handleEdit = useCallback((memo: { _id?: string; id: string; content: string }) => {
     setEditingId(memo._id || memo.id)
     setEditContent(memo.content)
-  }
+  }, [])
 
-  const handleSave = async (id: string) => {
+  const handleSave = useCallback(async (id: string) => {
     await updateMemo(id, editContent)
     setEditingId(null)
     setEditContent('')
-  }
+  }, [updateMemo, editContent])
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setEditingId(null)
     setEditContent('')
-  }
+  }, [])
 
   return (
     <div className="memo-list-container">

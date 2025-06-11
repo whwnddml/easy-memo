@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface Memo {
   _id?: string  // MongoDB의 _id
@@ -69,7 +69,7 @@ export const useMemoStore = create<MemoStore>()(
     (set, get) => ({
       memos: [],
       isLoading: false,
-      isOnline: false,
+      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
       error: null,
 
       fetchMemos: async () => {
@@ -394,7 +394,13 @@ export const useMemoStore = create<MemoStore>()(
       }
     }),
     {
-      name: 'memo-storage'
+      name: 'memo-storage',
+      storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
+      partialize: (state) => ({
+        memos: state.memos,
+        isOnline: state.isOnline
+      })
     }
   )
 ) 
