@@ -205,7 +205,7 @@ export const useMemoStore = create<MemoStore>()(
               },
               mode: 'cors',
               credentials: 'include',
-              body: JSON.stringify({ content })
+              body: JSON.stringify({ content, userId: getUserId() })
             });
 
             if (!response.ok) {
