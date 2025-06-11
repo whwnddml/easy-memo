@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 
+const API_URL = 'https://junny.dyndns.org:3008/api'
+
 interface Memo {
   id: string;
   content: string;
@@ -17,8 +19,6 @@ interface MemoStore {
   updateMemo: (memo: Memo) => Promise<void>;
   deleteMemo: (id: string) => Promise<void>;
 }
-
-const API_URL = 'https://port-0-memo-server-am952nlsu6unr5.sel5.cloudtype.app'
 
 // 임시 userId (로그인 기능 전까지)
 const DEFAULT_USER_ID = '665f1c000000000000000000'
@@ -83,17 +83,23 @@ const useMemoStore = create<MemoStore>((set) => ({
   fetchMemos: async () => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos?userId=user123`);
+      const response = await fetch(`${API_URL}/memos?userId=user123`, {
+        headers: {
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error('메모 목록을 불러오는데 실패했습니다.');
       }
       const data = await response.json();
       set({ 
         memos: data.map((memo: any) => ({
-          id: memo._id || memo.id,
+          id: memo._id,
           content: memo.content,
           userId: memo.userId || 'user123',
-          createdAt: memo.createdAt || new Date().toISOString(),
+          createdAt: memo.createdAt,
           isOffline: false
         }))
       });
@@ -108,13 +114,16 @@ const useMemoStore = create<MemoStore>((set) => ({
   addMemo: async (memo) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos`, {
+      const response = await fetch(`${API_URL}/memos?userId=user123`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
+        mode: 'cors',
+        credentials: 'include',
         body: JSON.stringify({
-          ...memo,
+          content: memo.content,
           userId: 'user123'
         }),
       });
@@ -124,10 +133,10 @@ const useMemoStore = create<MemoStore>((set) => ({
       const newMemo = await response.json();
       set((state) => ({
         memos: [...state.memos, {
-          id: newMemo._id || newMemo.id,
+          id: newMemo._id,
           content: newMemo.content,
           userId: newMemo.userId || 'user123',
-          createdAt: newMemo.createdAt || new Date().toISOString(),
+          createdAt: newMemo.createdAt,
           isOffline: false
         }],
       }));
@@ -142,13 +151,16 @@ const useMemoStore = create<MemoStore>((set) => ({
   updateMemo: async (memo) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos/${memo.id}`, {
+      const response = await fetch(`${API_URL}/memos/${memo.id}?userId=user123`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
+        mode: 'cors',
+        credentials: 'include',
         body: JSON.stringify({
-          ...memo,
+          content: memo.content,
           userId: 'user123'
         }),
       });
@@ -160,10 +172,10 @@ const useMemoStore = create<MemoStore>((set) => ({
         memos: state.memos.map((m) => 
           m.id === memo.id 
             ? {
-                id: updatedMemo._id || updatedMemo.id,
+                id: updatedMemo._id,
                 content: updatedMemo.content,
                 userId: updatedMemo.userId || 'user123',
-                createdAt: updatedMemo.createdAt || new Date().toISOString(),
+                createdAt: updatedMemo.createdAt,
                 isOffline: false
               }
             : m
@@ -182,6 +194,11 @@ const useMemoStore = create<MemoStore>((set) => ({
     try {
       const response = await fetch(`${API_URL}/memos/${id}?userId=user123`, {
         method: 'DELETE',
+        headers: {
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'include'
       });
       if (!response.ok) {
         throw new Error('메모 삭제에 실패했습니다.');
