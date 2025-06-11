@@ -34,13 +34,13 @@ jobs:
         run: |
           cd frontend
           npm run build
-          touch out/.nojekyll
-          echo "whwnddml.github.io/easy-memo" > out/CNAME
+          touch .next/out/.nojekyll
+          echo "whwnddml.github.io/easy-memo" > .next/out/CNAME
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/out
+          folder: frontend/.next/out
           branch: gh-pages
           clean: true
           single-commit: true 
