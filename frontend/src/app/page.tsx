@@ -6,29 +6,33 @@ import MemoList from './components/MemoList'
 import { useMemoStore } from './store/memoStore'
 
 export default function Home() {
-  const { setOnlineStatus, checkOnlineStatus, error } = useMemoStore();
+  const { setOnlineStatus, checkOnlineStatus, error, setHydrated } = useMemoStore();
 
   useEffect(() => {
-    // store hydration
-    useMemoStore.persist.rehydrate();
+    const initializeStore = async () => {
+      // store hydration
+      await useMemoStore.persist.rehydrate();
+      setHydrated();
 
-    // 초기 온라인 상태 체크
-    const checkInitialOnlineStatus = () => {
+      // 초기 온라인 상태 체크
       const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
       setOnlineStatus(isOnline);
-      checkOnlineStatus();
+      if (isOnline) {
+        await checkOnlineStatus();
+      }
     };
 
-    checkInitialOnlineStatus();
+    initializeStore();
 
     // 주기적으로 온라인 상태 체크 (30초마다)
-    const intervalId = setInterval(() => {
-      checkOnlineStatus();
+    const intervalId = setInterval(async () => {
+      await checkOnlineStatus();
     }, 30000);
 
     // 온라인 상태 변경 이벤트 리스너
     const handleOnline = () => {
       setOnlineStatus(true);
+      checkOnlineStatus();
     };
 
     const handleOffline = () => {
@@ -47,7 +51,7 @@ export default function Home() {
         window.removeEventListener('offline', handleOffline);
       }
     };
-  }, [setOnlineStatus, checkOnlineStatus]);
+  }, [setOnlineStatus, checkOnlineStatus, setHydrated]);
 
   return (
     <main className="container">

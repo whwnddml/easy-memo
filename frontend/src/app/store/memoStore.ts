@@ -144,11 +144,13 @@ export const useMemoStore = create<MemoStore>()(
         const state = get()
         if (!state.isHydrated) return
         
+        set({ isLoading: true, error: null })
+        
         try {
           const isConnected = await checkServerConnection()
           
           if (isConnected) {
-            set({ isOnline: true, isLoading: true })
+            set({ isOnline: true })
             
             try {
               const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
@@ -186,18 +188,24 @@ export const useMemoStore = create<MemoStore>()(
 
               await get().syncOfflineMemos()
             } catch (error) {
+              console.error('메모 목록 가져오기 오류:', error)
               set({
                 error: error instanceof Error ? error.message : '메모 목록 가져오기 중 오류가 발생했습니다',
                 isLoading: false
               })
             }
           } else {
-            set({ isOnline: false })
+            set({ 
+              isOnline: false,
+              isLoading: false,
+              error: '서버에 연결할 수 없습니다. 오프라인 모드로 전환합니다.'
+            })
           }
         } catch (error) {
           console.error('온라인 상태 체크 오류:', error)
           set({ 
             isOnline: false,
+            isLoading: false,
             error: '서버 연결 상태를 확인할 수 없습니다.'
           })
         }
