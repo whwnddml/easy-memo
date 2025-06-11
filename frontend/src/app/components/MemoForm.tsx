@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useMemoStore } from '../store/memoStore'
+import { useMemoStore, getUserId } from '../store/memoStore'
 
 export default function MemoForm() {
   const [content, setContent] = useState('')
@@ -13,7 +13,7 @@ export default function MemoForm() {
 
     await addMemo({
       content,
-      userId: 'user123',
+      userId: getUserId(),
       createdAt: new Date().toISOString()
     })
     setContent('')

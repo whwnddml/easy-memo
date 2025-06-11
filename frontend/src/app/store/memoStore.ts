@@ -83,7 +83,7 @@ const useMemoStore = create<MemoStore>((set) => ({
   fetchMemos: async () => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos?userId=user123`, {
+      const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
         headers: {
           'Accept': 'application/json'
         },
@@ -98,7 +98,7 @@ const useMemoStore = create<MemoStore>((set) => ({
         memos: data.map((memo: any) => ({
           id: memo._id,
           content: memo.content,
-          userId: memo.userId || 'user123',
+          userId: memo.userId || getUserId(),
           createdAt: memo.createdAt,
           isOffline: false
         }))
@@ -114,7 +114,7 @@ const useMemoStore = create<MemoStore>((set) => ({
   addMemo: async (memo) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos?userId=user123`, {
+      const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ const useMemoStore = create<MemoStore>((set) => ({
         credentials: 'include',
         body: JSON.stringify({
           content: memo.content,
-          userId: 'user123'
+          userId: getUserId()
         }),
       });
       if (!response.ok) {
@@ -135,7 +135,7 @@ const useMemoStore = create<MemoStore>((set) => ({
         memos: [...state.memos, {
           id: newMemo._id,
           content: newMemo.content,
-          userId: newMemo.userId || 'user123',
+          userId: newMemo.userId || getUserId(),
           createdAt: newMemo.createdAt,
           isOffline: false
         }],
@@ -151,7 +151,7 @@ const useMemoStore = create<MemoStore>((set) => ({
   updateMemo: async (memo) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos/${memo.id}?userId=user123`, {
+      const response = await fetch(`${API_URL}/memos/${memo.id}?userId=${getUserId()}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ const useMemoStore = create<MemoStore>((set) => ({
         credentials: 'include',
         body: JSON.stringify({
           content: memo.content,
-          userId: 'user123'
+          userId: getUserId()
         }),
       });
       if (!response.ok) {
@@ -174,7 +174,7 @@ const useMemoStore = create<MemoStore>((set) => ({
             ? {
                 id: updatedMemo._id,
                 content: updatedMemo.content,
-                userId: updatedMemo.userId || 'user123',
+                userId: updatedMemo.userId || getUserId(),
                 createdAt: updatedMemo.createdAt,
                 isOffline: false
               }
@@ -192,7 +192,7 @@ const useMemoStore = create<MemoStore>((set) => ({
   deleteMemo: async (id) => {
     set({ isLoading: true });
     try {
-      const response = await fetch(`${API_URL}/memos/${id}?userId=user123`, {
+      const response = await fetch(`${API_URL}/memos/${id}?userId=${getUserId()}`, {
         method: 'DELETE',
         headers: {
           'Accept': 'application/json'
@@ -215,5 +215,5 @@ const useMemoStore = create<MemoStore>((set) => ({
   },
 }))
 
-export { useMemoStore }
+export { useMemoStore, getUserId }
 export type { Memo } 
