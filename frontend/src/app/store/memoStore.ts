@@ -30,14 +30,18 @@ const API_URL = 'https://junny.dyndns.org:3008/api'
 const DEFAULT_USER_ID = '665f1c000000000000000000'; // 실제 발급된 ObjectId로 교체 필요
 const USER_ID_KEY = 'easymemo_userId';
 
-function getUserId() {
-  if (typeof window === 'undefined') return DEFAULT_USER_ID;
+let cachedUserId = DEFAULT_USER_ID;
+if (typeof window !== 'undefined') {
   let userId = localStorage.getItem(USER_ID_KEY);
   if (!userId) {
     userId = DEFAULT_USER_ID;
     localStorage.setItem(USER_ID_KEY, userId);
   }
-  return userId;
+  cachedUserId = userId;
+}
+
+function getUserId() {
+  return cachedUserId;
 }
 
 const checkServerConnection = async () => {
