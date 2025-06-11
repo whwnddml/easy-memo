@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,13 +34,13 @@ jobs:
         run: |
           cd frontend
           npm run build
-          touch .next/out/.nojekyll
-          echo "whwnddml.github.io/easy-memo" > .next/out/CNAME
+          touch out/.nojekyll
+          echo "whwnddml.github.io/easy-memo" > out/CNAME
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/.next/out
+          folder: frontend/out
           branch: gh-pages
           clean: true
           single-commit: true 
