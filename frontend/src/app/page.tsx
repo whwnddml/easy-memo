@@ -10,7 +10,13 @@ export default function Home() {
 
   useEffect(() => {
     // 초기 온라인 상태 체크
-    checkOnlineStatus();
+    const checkInitialOnlineStatus = () => {
+      const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+      setOnlineStatus(isOnline);
+      checkOnlineStatus();
+    };
+
+    checkInitialOnlineStatus();
 
     // 주기적으로 온라인 상태 체크 (30초마다)
     const intervalId = setInterval(() => {
@@ -26,13 +32,17 @@ export default function Home() {
       setOnlineStatus(false);
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+    }
 
     return () => {
       clearInterval(intervalId);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      }
     };
   }, [setOnlineStatus, checkOnlineStatus]);
 

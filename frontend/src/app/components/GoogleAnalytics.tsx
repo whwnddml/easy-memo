@@ -1,7 +1,7 @@
 'use client';
 
 import Script from 'next/script';
-const APP_VERSION = '2024.06.11-DEV1'; // 개발자가 직접 입력
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '2024.06.11-DEV1';
 
 // GA 타입 선언
 declare global {
