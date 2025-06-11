@@ -130,7 +130,20 @@ app.get('/api/memos', async (req, res, next) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ message: 'userId는 필수입니다' });
-    const memos = await Memo.find({ userId })
+
+    // userId가 ObjectId가 아닌 경우 임시 사용자로 처리
+    let finalUserId = userId;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      // 임시 사용자 ID로 조회
+      let user = await User.findOne({ email: userId });
+      if (!user) {
+        // 임시 사용자 생성
+        user = await User.create({ email: userId });
+      }
+      finalUserId = user._id;
+    }
+
+    const memos = await Memo.find({ userId: finalUserId })
       .sort({ createdAt: -1 })
       .select('content createdAt updatedAt');
     res.json(memos);
