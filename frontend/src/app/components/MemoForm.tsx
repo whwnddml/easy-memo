@@ -127,11 +127,15 @@ export default function MemoForm() {
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="메모를 입력하세요..."
-        disabled={!isOnline}
       />
-      <button type="submit" disabled={!content.trim() || !isOnline}>
+      <button type="submit" disabled={!content.trim()}>
         저장
       </button>
+      {!isOnline && (
+        <div style={{ color: 'orange', fontSize: '0.95em', marginTop: 6 }}>
+          오프라인 상태입니다. 메모는 임시 저장되며, 인터넷 연결 시 자동 동기화됩니다.
+        </div>
+      )}
     </form>
   )
 } 
