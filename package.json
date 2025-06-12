@@ -1,0 +1,41 @@
+{
+  "name": "easymemo",
+  "version": "1.2.0",
+  "description": "Easy Memo Application with dual storage system (localStorage + MongoDB)",
+  "main": "backend/server.js",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "build:frontend": "cd frontend && npm run build",
+    "update-changelog": "node scripts/update-changelog.js",
+    "release": "npm run update-changelog -- --tag && git add CHANGELOG.md && git commit -m 'docs: update changelog' && git push origin main --tags",
+    "version:patch": "npm version patch && npm run update-changelog",
+    "version:minor": "npm version minor && npm run update-changelog",
+    "version:major": "npm version major && npm run update-changelog"
+  },
+  "keywords": [
+    "memo",
+    "notes",
+    "localStorage",
+    "mongodb",
+    "nextjs",
+    "express",
+    "jwt",
+    "authentication"
+  ],
+  "author": "junnycho",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whwnddml/easy-memo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/whwnddml/easy-memo/issues"
+  },
+  "homepage": "https://whwnddml.github.io/easy-memo/",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
