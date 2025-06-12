@@ -7,6 +7,22 @@
   --background-rgb: 255, 255, 255;
 }
 
+/* PWA 전용 스타일 */
+@media (display-mode: standalone) {
+  /* 홈화면에서 실행될 때만 적용 */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* 상태바 영역 고려 */
+  .container {
+    margin-top: calc(20px + env(safe-area-inset-top));
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -15,11 +31,26 @@
   }
 }
 
+/* 기본 body 스타일 */
 body {
   background: #f0f0f0;
   font-family: 'Noto Sans KR', sans-serif;
   margin: 0;
   padding: 20px;
+  /* iOS PWA 최적화 */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* 전체 앱 컨테이너 */
+#__next {
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 .container {
