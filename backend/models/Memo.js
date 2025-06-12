@@ -1,18 +1,31 @@
 const mongoose = require('mongoose');
 
 const memoSchema = new mongoose.Schema({
-  content: {
-    type: String,
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true 
+  },
+  content: { 
+    type: String, 
+    required: [true, '메모 내용은 필수입니다'] 
+  },
+  createdAt: { 
+    type: Date, 
+    default: Date.now,
     required: true
   },
-  userId: {
-    type: String,
+  updatedAt: { 
+    type: Date, 
+    default: Date.now,
     required: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
   }
+});
+
+// 저장 전 updatedAt 필드 업데이트
+memoSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 module.exports = mongoose.model('Memo', memoSchema); 

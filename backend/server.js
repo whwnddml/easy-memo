@@ -3,6 +3,10 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
+// 모델 import
+const User = require('./models/User');
+const Memo = require('./models/Memo');
+
 const app = express();
 
 // CORS 설정
@@ -65,40 +69,6 @@ const connectDB = async () => {
 
 // 초기 MongoDB 연결
 connectDB();
-
-// 유저 스키마 및 모델
-const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  createdAt: { type: Date, default: Date.now, required: true }
-});
-const User = mongoose.model('User', userSchema);
-
-// 메모 스키마 정의
-const memoSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  content: { 
-    type: String, 
-    required: [true, '메모 내용은 필수입니다'] 
-  },
-  createdAt: { 
-    type: Date, 
-    default: Date.now,
-    required: true
-  },
-  updatedAt: { 
-    type: Date, 
-    default: Date.now,
-    required: true
-  }
-});
-
-// 저장 전 updatedAt 필드 업데이트
-memoSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
-});
-
-const Memo = mongoose.model('Memo', memoSchema);
 
 // 에러 핸들러 미들웨어
 const errorHandler = (err, req, res, next) => {
@@ -235,5 +205,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
   console.log(`[${new Date().toISOString()}] 서버가 포트 ${PORT}에서 실행 중입니다`);
-  console.log('GitHub Actions 배포 테스트 성공! (20차 테스트)');
+  console.log('GitHub Actions 배포 테스트 성공! (19차 테스트)');
 }); 
