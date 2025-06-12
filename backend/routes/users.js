@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 // 사용자 목록 조회
 router.get('/', async (req, res, next) => {
   try {
     const users = await User.find()
       .sort({ createdAt: -1 })
-      .select('email createdAt');
+      .select('email socialProvider createdAt');  // 패스워드는 제외하고 반환
     res.json(users);
   } catch (error) {
     next(error);
@@ -23,9 +24,9 @@ router.get('/:identifier', async (req, res, next) => {
 
     // ObjectId인지 확인하여 _id로 조회하거나 email로 조회
     if (mongoose.Types.ObjectId.isValid(identifier)) {
-      user = await User.findById(identifier);
+      user = await User.findById(identifier).select('-password');  // 패스워드 제외
     } else {
-      user = await User.findOne({ email: identifier });
+      user = await User.findOne({ email: identifier }).select('-password');
     }
 
     if (!user) {
@@ -38,10 +39,10 @@ router.get('/:identifier', async (req, res, next) => {
   }
 });
 
-// 사용자 생성
+// 사용자 생성 (일반 회원가입)
 router.post('/', async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, password, socialKey, socialProvider } = req.body;
 
     if (!email || !email.trim()) {
       return res.status(400).json({ message: '이메일은 필수입니다.' });
@@ -59,16 +60,49 @@ router.post('/', async (req, res, next) => {
       return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
     }
 
-    const user = new User({
-      email: email.trim()
-    });
+    // 소셜 키 중복 확인 (소셜 키가 제공된 경우)
+    if (socialKey) {
+      const existingSocialUser = await User.findOne({ socialKey });
+      if (existingSocialUser) {
+        return res.status(409).json({ message: '이미 존재하는 소셜 계정입니다.' });
+      }
+    }
 
+    const userData = {
+      email: email.trim()
+    };
+
+    // 패스워드가 제공된 경우 해시화
+    if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({ message: '패스워드는 최소 6자 이상이어야 합니다.' });
+      }
+      userData.password = await bcrypt.hash(password, 10);
+    }
+
+    // 소셜 정보가 제공된 경우
+    if (socialKey) {
+      userData.socialKey = socialKey;
+      userData.socialProvider = socialProvider;
+    }
+
+    const user = new User(userData);
     const savedUser = await user.save();
-    res.status(201).json(savedUser);
+    
+    // 응답에서 패스워드 제외
+    const userResponse = savedUser.toObject();
+    delete userResponse.password;
+    
+    res.status(201).json(userResponse);
   } catch (error) {
     if (error.code === 11000) {
       // MongoDB 중복 키 에러
-      return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+      if (error.keyPattern.email) {
+        return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+      }
+      if (error.keyPattern.socialKey) {
+        return res.status(409).json({ message: '이미 존재하는 소셜 계정입니다.' });
+      }
     }
     next(error);
   }
@@ -78,36 +112,70 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { email } = req.body;
+    const { email, password, socialKey, socialProvider } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: '잘못된 사용자 ID입니다.' });
     }
 
-    if (!email || !email.trim()) {
-      return res.status(400).json({ message: '이메일은 필수입니다.' });
+    const updateData = {};
+
+    // 이메일 수정
+    if (email) {
+      if (!email.trim()) {
+        return res.status(400).json({ message: '이메일은 필수입니다.' });
+      }
+
+      // 이메일 형식 검증
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ message: '올바른 이메일 형식이 아닙니다.' });
+      }
+
+      // 다른 사용자가 같은 이메일을 사용하는지 확인
+      const existingUser = await User.findOne({ 
+        email: email.trim(), 
+        _id: { $ne: id } 
+      });
+      if (existingUser) {
+        return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+      }
+
+      updateData.email = email.trim();
     }
 
-    // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return res.status(400).json({ message: '올바른 이메일 형식이 아닙니다.' });
+    // 패스워드 수정
+    if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({ message: '패스워드는 최소 6자 이상이어야 합니다.' });
+      }
+      updateData.password = await bcrypt.hash(password, 10);
     }
 
-    // 다른 사용자가 같은 이메일을 사용하는지 확인
-    const existingUser = await User.findOne({ 
-      email: email.trim(), 
-      _id: { $ne: id } 
-    });
-    if (existingUser) {
-      return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+    // 소셜 정보 수정
+    if (socialKey !== undefined) {
+      if (socialKey) {
+        // 다른 사용자가 같은 소셜 키를 사용하는지 확인
+        const existingSocialUser = await User.findOne({ 
+          socialKey, 
+          _id: { $ne: id } 
+        });
+        if (existingSocialUser) {
+          return res.status(409).json({ message: '이미 존재하는 소셜 계정입니다.' });
+        }
+      }
+      updateData.socialKey = socialKey;
+    }
+
+    if (socialProvider !== undefined) {
+      updateData.socialProvider = socialProvider;
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      { email: email.trim() },
+      updateData,
       { new: true, runValidators: true }
-    );
+    ).select('-password');
 
     if (!updatedUser) {
       return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
@@ -116,7 +184,12 @@ router.put('/:id', async (req, res, next) => {
     res.json(updatedUser);
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+      if (error.keyPattern.email) {
+        return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+      }
+      if (error.keyPattern.socialKey) {
+        return res.status(409).json({ message: '이미 존재하는 소셜 계정입니다.' });
+      }
     }
     next(error);
   }
@@ -143,6 +216,102 @@ router.delete('/:id', async (req, res, next) => {
 
     res.status(204).send();
   } catch (error) {
+    next(error);
+  }
+});
+
+// 로그인 API (이메일 + 패스워드)
+router.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: '이메일과 패스워드는 필수입니다.' });
+    }
+
+    // 사용자 찾기
+    const user = await User.findOne({ email: email.trim() });
+    if (!user) {
+      return res.status(401).json({ message: '이메일 또는 패스워드가 올바르지 않습니다.' });
+    }
+
+    // 패스워드 확인
+    if (!user.password) {
+      return res.status(401).json({ message: '소셜 로그인 계정입니다. 소셜 로그인을 이용해주세요.' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: '이메일 또는 패스워드가 올바르지 않습니다.' });
+    }
+
+    // 응답에서 패스워드 제외
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({
+      message: '로그인 성공',
+      user: userResponse
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 소셜 로그인 API
+router.post('/social-login', async (req, res, next) => {
+  try {
+    const { socialKey, socialProvider, email } = req.body;
+
+    if (!socialKey || !socialProvider) {
+      return res.status(400).json({ message: '소셜 키와 제공자는 필수입니다.' });
+    }
+
+    // 소셜 키로 사용자 찾기
+    let user = await User.findOne({ socialKey });
+
+    if (!user && email) {
+      // 소셜 키로 찾지 못했지만 이메일이 있는 경우, 기존 계정에 소셜 정보 연결
+      user = await User.findOne({ email: email.trim() });
+      if (user) {
+        // 기존 계정에 소셜 정보 추가
+        user.socialKey = socialKey;
+        user.socialProvider = socialProvider;
+        await user.save();
+      }
+    }
+
+    if (!user) {
+      // 새 소셜 사용자 생성
+      if (!email) {
+        return res.status(400).json({ message: '신규 소셜 사용자는 이메일이 필요합니다.' });
+      }
+
+      user = new User({
+        email: email.trim(),
+        socialKey,
+        socialProvider
+      });
+      await user.save();
+    }
+
+    // 응답에서 패스워드 제외
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({
+      message: '소셜 로그인 성공',
+      user: userResponse
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      if (error.keyPattern.email) {
+        return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+      }
+      if (error.keyPattern.socialKey) {
+        return res.status(409).json({ message: '이미 존재하는 소셜 계정입니다.' });
+      }
+    }
     next(error);
   }
 });
