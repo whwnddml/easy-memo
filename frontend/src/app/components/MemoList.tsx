@@ -306,42 +306,39 @@ export default function MemoList() {
   const listContainerRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef<boolean>(false);
 
-  // 스크롤 이벤트 핸들러 (iOS가 아닌 환경용)
-  const handleScroll = useCallback(async () => {
-    // 기본 조건 체크
-    if (ios || !hasMore || isLoading) {
-      console.log('스크롤 무시:', { ios, hasMore, isLoading });
-      return;
-    }
+  // Intersection Observer를 위한 ref
+  const observerRef = useRef<HTMLDivElement>(null);
 
-    // 스크롤 위치 계산
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-    const distanceToBottom = documentHeight - (scrollTop + windowHeight);
-    
-    console.log('스크롤 상태:', {
-      scrollTop,
-      windowHeight,
-      documentHeight,
-      distanceToBottom,
-      hasMore
-    });
-
-    // 하단에서 150px 이내일 때 추가 로드
-    if (distanceToBottom < 150) {
-      console.log('하단 감지, 추가 로드 시도');
-      await loadMoreMemos();
-    }
-  }, [ios, hasMore, isLoading, loadMoreMemos]);
-
-  // 스크롤 이벤트 리스너 등록 (iOS가 아닌 환경용)
+  // Intersection Observer 설정 (iOS가 아닌 환경용)
   useEffect(() => {
-    if (!ios) {
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
+    if (ios || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !isLoading && hasMore) {
+          console.log('Observer 감지, 추가 로드 시도');
+          await loadMoreMemos();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1,
+      }
+    );
+
+    const currentObserver = observerRef.current;
+    if (currentObserver) {
+      observer.observe(currentObserver);
     }
-  }, [ios, handleScroll]);
+
+    return () => {
+      if (currentObserver) {
+        observer.unobserve(currentObserver);
+      }
+    };
+  }, [ios, hasMore, isLoading, loadMoreMemos]);
 
   // 새로고침 핸들러
   const handleRefresh = useCallback(async () => {
@@ -495,6 +492,14 @@ export default function MemoList() {
               </button>
             )}
           </div>
+        )}
+
+        {/* 일반 브라우저용 Observer 요소 */}
+        {!ios && hasMore && (
+          <div 
+            ref={observerRef}
+            style={{ height: '10px', margin: '20px 0' }}
+          />
         )}
 
         {/* 일반 브라우저용 로딩 표시 */}
