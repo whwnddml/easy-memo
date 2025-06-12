@@ -195,5 +195,6 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
   console.log(`[${new Date().toISOString()}] 서버가 포트 ${PORT}에서 실행 중입니다`);
-  console.log('GitHub Actions 배포 테스트 성공! (19차 테스트)');
+  console.log('GitHub Actions 배포 테스트 성공! ');
+  console.log('Admin Emails:', process.env.ADMIN_EMAILS);
 }); 
