@@ -14,8 +14,8 @@ const generateToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 };
 
-// 사용자 목록 조회
-router.get('/', async (req, res, next) => {
+// 사용자 목록 조회 (관리자 권한 필요)
+router.get('/', authenticateToken, async (req, res, next) => {
   try {
     const users = await User.find()
       .sort({ createdAt: -1 })
@@ -26,21 +26,27 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// 특정 사용자 조회 (ID 또는 이메일로)
-router.get('/:identifier', async (req, res, next) => {
+// 특정 사용자 조회 (본인만 조회 가능)
+router.get('/:identifier', authenticateToken, async (req, res, next) => {
   try {
     const { identifier } = req.params;
+    const requestUserId = req.userId; // JWT에서 추출한 사용자 ID
     let user;
 
     // ObjectId인지 확인하여 _id로 조회하거나 email로 조회
     if (mongoose.Types.ObjectId.isValid(identifier)) {
-      user = await User.findById(identifier).select('-password');  // 패스워드 제외
+      user = await User.findById(identifier).select('-password');
     } else {
       user = await User.findOne({ email: identifier }).select('-password');
     }
 
     if (!user) {
       return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 본인의 정보만 조회 가능
+    if (user._id.toString() !== requestUserId) {
+      return res.status(403).json({ message: '본인의 정보만 조회할 수 있습니다.' });
     }
 
     res.json(user);
@@ -126,14 +132,20 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// 사용자 수정
-router.put('/:id', async (req, res, next) => {
+// 사용자 수정 (본인만 수정 가능)
+router.put('/:id', authenticateToken, async (req, res, next) => {
   try {
     const { id } = req.params;
     const { email, password, socialKey, socialProvider } = req.body;
+    const requestUserId = req.userId; // JWT에서 추출한 사용자 ID
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: '잘못된 사용자 ID입니다.' });
+    }
+
+    // 본인의 정보만 수정 가능
+    if (id !== requestUserId) {
+      return res.status(403).json({ message: '본인의 정보만 수정할 수 있습니다.' });
     }
 
     const updateData = {};
@@ -213,13 +225,19 @@ router.put('/:id', async (req, res, next) => {
   }
 });
 
-// 사용자 삭제
-router.delete('/:id', async (req, res, next) => {
+// 사용자 삭제 (본인만 삭제 가능)
+router.delete('/:id', authenticateToken, async (req, res, next) => {
   try {
     const { id } = req.params;
+    const requestUserId = req.userId; // JWT에서 추출한 사용자 ID
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: '잘못된 사용자 ID입니다.' });
+    }
+
+    // 본인만 삭제 가능
+    if (id !== requestUserId) {
+      return res.status(403).json({ message: '본인의 계정만 삭제할 수 있습니다.' });
     }
 
     const deletedUser = await User.findByIdAndDelete(id);
