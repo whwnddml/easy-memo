@@ -612,4 +612,57 @@ h1 {
   width: 100%;
   height: 20px;
   margin: 10px 0;
+}
+
+/* iOS PWA 새로고침 버튼 */
+.refresh-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #4f8cff;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.refresh-button:active {
+  transform: scale(0.98);
+  background: #2563eb;
+}
+
+.refresh-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.refresh-button .spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* iOS PWA 스크롤 최적화 */
+@supports (-webkit-touch-callout: none) {
+  .memo-list-container {
+    /* iOS 모멘텀 스크롤 활성화 */
+    -webkit-overflow-scrolling: touch;
+    /* iOS 바운스 효과 비활성화 */
+    overscroll-behavior-y: none;
+    /* iOS 러버밴드 효과 비활성화 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .memo-list {
+    padding-bottom: 100px; /* iOS에서 하단 여백 추가 */
+  }
 } 

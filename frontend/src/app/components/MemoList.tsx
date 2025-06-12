@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useMemoStore } from '../store/memoStore'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { FaEdit, FaTrash, FaSync } from 'react-icons/fa'
+import { isIOSPWA } from '../utils/deviceDetect'
 
 // 모바일 환경 감지 함수
 const isMobile = () => {
@@ -296,8 +297,20 @@ export default function MemoList() {
     return <div className="loading">로딩 중...</div>
   }
 
+  const isPWA = isIOSPWA();
+
+  const handleRefresh = useCallback(async () => {
+    await fetchMemos(true);
+  }, [fetchMemos]);
+
   return (
     <div className="memo-list-container">
+      {isPWA && (
+        <div className="refresh-button" onClick={handleRefresh}>
+          <FaSync className={isLoading ? 'spinning' : ''} />
+          <span>새로고침</span>
+        </div>
+      )}
       <div className={`loading-overlay ${isLoading ? 'visible' : ''}`}>
         <div className="loading-spinner" />
       </div>
