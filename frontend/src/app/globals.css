@@ -73,6 +73,27 @@ h1 {
   transform: translateY(-1px);
 }
 
+.login-btn {
+  background: #4f8cff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.guest-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .content-area {
   flex: 1;
   display: flex;
