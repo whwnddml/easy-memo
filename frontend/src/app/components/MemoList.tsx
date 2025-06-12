@@ -1,8 +1,14 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useMemoStore } from '../store/memoStore'
-import { FaEdit, FaTrash } from 'react-icons/fa'
+import { FaEdit, FaTrash, FaChevronDown, FaChevronUp, FaSync } from 'react-icons/fa'
+
+// iOS 환경 감지
+const isIOS = () => {
+  if (typeof window === 'undefined') return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+}
 
 // 모바일 환경 감지 함수
 const isMobile = () => {
@@ -293,8 +299,40 @@ export default function MemoList() {
     return <div className="loading">로딩 중...</div>
   }
 
+  const ios = isIOS();
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 새로고침 핸들러
+  const handleRefresh = useCallback(async () => {
+    setCurrentPage(1);
+    await fetchMemos(true);
+  }, [fetchMemos]);
+
+  // 이전 페이지 로드
+  const handlePrevPage = useCallback(async () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+      await fetchMemos(true);
+    }
+  }, [currentPage, fetchMemos]);
+
+  // 다음 페이지 로드
+  const handleNextPage = useCallback(async () => {
+    if (hasMore) {
+      setCurrentPage(prev => prev + 1);
+      await loadMoreMemos();
+    }
+  }, [hasMore, loadMoreMemos]);
+
   return (
     <div className="memo-list-container">
+      {ios && (
+        <div className="ios-controls">
+          <button className="refresh-button" onClick={handleRefresh}>
+            <FaSync className={isLoading ? 'spinning' : ''} />
+          </button>
+        </div>
+      )}
       <div className={`loading-overlay ${isLoading ? 'visible' : ''}`}>
         <div className="loading-spinner" />
       </div>
@@ -400,8 +438,26 @@ export default function MemoList() {
           </div>
         )}
         
-        {/* 로딩 상태 표시 */}
-        {isLoadingMore && (
+        {/* iOS 페이지네이션 컨트롤 */}
+        {ios && memos.length > 0 && (
+          <div className="ios-pagination">
+            {currentPage > 1 && (
+              <button className="page-button prev" onClick={handlePrevPage} disabled={isLoading}>
+                <FaChevronUp />
+                <span>이전</span>
+              </button>
+            )}
+            {hasMore && (
+              <button className="page-button next" onClick={handleNextPage} disabled={isLoading}>
+                <span>다음</span>
+                <FaChevronDown />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 일반 브라우저용 로딩 표시 */}
+        {!ios && isLoadingMore && (
           <div className="loading-more">
             <div className="loading-spinner-small" />
             <span>더 많은 메모를 불러오는 중...</span>
