@@ -12,8 +12,12 @@ export interface Memo {
 interface MemoStore {
   memos: Memo[]
   isLoading: boolean
+  isLoadingMore: boolean
   error: string | null
-  fetchMemos: () => Promise<void>
+  hasMore: boolean
+  currentPage: number
+  fetchMemos: (reset?: boolean) => Promise<void>
+  loadMoreMemos: () => Promise<void>
   addMemo: (memo: Omit<Memo, 'id' | 'createdAt'>) => Promise<void>
   updateMemo: (memo: Memo) => Promise<void>
   deleteMemo: (id: string) => Promise<void>
@@ -74,10 +78,17 @@ export const useMemoStore = create<MemoStore>()(
     (set, get) => ({
       memos: [],
       isLoading: false,
+      isLoadingMore: false,
       error: null,
+      hasMore: true,
+      currentPage: 1,
 
-      fetchMemos: async () => {
-        set({ isLoading: true, error: null });
+      fetchMemos: async (reset = true) => {
+        const currentState = get();
+        
+        if (reset) {
+          set({ isLoading: true, error: null, currentPage: 1, hasMore: true });
+        }
         
         try {
           const userId = getUserId();
@@ -85,12 +96,13 @@ export const useMemoStore = create<MemoStore>()(
           if (!userId) {
             // 로그인하지 않은 경우 로컬 스토리지에서 가져오기
             const localMemos = getLocalMemos();
-            set({ memos: localMemos, isLoading: false });
+            set({ memos: localMemos, isLoading: false, hasMore: false });
             return;
           }
 
-          // 로그인한 경우 서버에서 가져오기
-          const response = await fetch(`${API_URL}/api/memos`, {
+          // 로그인한 경우 서버에서 가져오기 (페이징 적용)
+          const page = reset ? 1 : currentState.currentPage;
+          const response = await fetch(`${API_URL}/api/memos?page=${page}&limit=20`, {
             headers: getAuthHeaders(),
             mode: 'cors',
             credentials: 'include'
@@ -100,20 +112,76 @@ export const useMemoStore = create<MemoStore>()(
             throw new Error('메모를 불러오는데 실패했습니다.');
           }
 
-          const serverMemos = await response.json();
-          const memos = serverMemos.map((memo: any) => ({
+          const data = await response.json();
+          const newMemos = data.memos.map((memo: any) => ({
             id: memo._id,
             content: memo.content,
             createdAt: memo.createdAt,
             updatedAt: memo.updatedAt
           }));
 
-          set({ memos, isLoading: false });
+          set({ 
+            memos: reset ? newMemos : [...currentState.memos, ...newMemos],
+            isLoading: false,
+            hasMore: data.pagination.hasMore,
+            currentPage: data.pagination.currentPage
+          });
         } catch (error) {
           console.error('메모 목록 조회 중 오류:', error);
           set({ 
             error: error instanceof Error ? error.message : '메모를 불러오는데 실패했습니다.',
             isLoading: false 
+          });
+        }
+      },
+
+      loadMoreMemos: async () => {
+        const currentState = get();
+        
+        if (!currentState.hasMore || currentState.isLoadingMore || currentState.isLoading) {
+          return;
+        }
+
+        set({ isLoadingMore: true, error: null });
+        
+        try {
+          const userId = getUserId();
+          
+          if (!userId) {
+            set({ isLoadingMore: false });
+            return;
+          }
+
+          const nextPage = currentState.currentPage + 1;
+          const response = await fetch(`${API_URL}/api/memos?page=${nextPage}&limit=20`, {
+            headers: getAuthHeaders(),
+            mode: 'cors',
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            throw new Error('추가 메모를 불러오는데 실패했습니다.');
+          }
+
+          const data = await response.json();
+          const newMemos = data.memos.map((memo: any) => ({
+            id: memo._id,
+            content: memo.content,
+            createdAt: memo.createdAt,
+            updatedAt: memo.updatedAt
+          }));
+
+          set({ 
+            memos: [...currentState.memos, ...newMemos],
+            isLoadingMore: false,
+            hasMore: data.pagination.hasMore,
+            currentPage: data.pagination.currentPage
+          });
+        } catch (error) {
+          console.error('추가 메모 조회 중 오류:', error);
+          set({ 
+            error: error instanceof Error ? error.message : '추가 메모를 불러오는데 실패했습니다.',
+            isLoadingMore: false 
           });
         }
       },
@@ -163,7 +231,12 @@ export const useMemoStore = create<MemoStore>()(
           };
 
           const currentMemos = get().memos;
-          set({ memos: [formattedMemo, ...currentMemos], isLoading: false });
+          set({ 
+            memos: [formattedMemo, ...currentMemos], 
+            isLoading: false,
+            currentPage: 1,
+            hasMore: true
+          });
         } catch (error) {
           console.error('메모 추가 중 오류:', error);
           set({ 
@@ -274,7 +347,12 @@ export const useMemoStore = create<MemoStore>()(
       },
 
       clearMemos: () => {
-        set({ memos: [], error: null });
+        set({ 
+          memos: [], 
+          error: null, 
+          currentPage: 1, 
+          hasMore: true 
+        });
       },
     }),
     {

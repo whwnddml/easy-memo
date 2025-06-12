@@ -36,7 +36,16 @@ interface SystemInfo {
 }
 
 export default function MemoList() {
-  const { memos, deleteMemo, updateMemo, fetchMemos, isLoading } = useMemoStore()
+  const { 
+    memos, 
+    deleteMemo, 
+    updateMemo, 
+    fetchMemos, 
+    loadMoreMemos,
+    isLoading, 
+    isLoadingMore,
+    hasMore 
+  } = useMemoStore()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
   const [systemInfo, setSystemInfo] = useState<SystemInfo>({
@@ -55,9 +64,29 @@ export default function MemoList() {
     }
   }, [fetchMemos])
 
+  // 무한 스크롤 핸들러
+  const handleScroll = useCallback(() => {
+    if (isLoading || isLoadingMore || !hasMore) return;
+
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.offsetHeight;
+
+    // 하단에서 100px 이내에 도달하면 추가 로드
+    if (scrollTop + windowHeight >= documentHeight - 100) {
+      loadMoreMemos();
+    }
+  }, [isLoading, isLoadingMore, hasMore, loadMoreMemos]);
+
   useEffect(() => {
     initializeMemos()
   }, [initializeMemos])
+
+  // 스크롤 이벤트 리스너 등록
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll])
 
   useEffect(() => {
     const collectSystemInfo = () => {
@@ -361,6 +390,21 @@ export default function MemoList() {
               )}
             </div>
           ))
+        )}
+        
+        {/* 무한 스크롤 로딩 인디케이터 */}
+        {isLoadingMore && (
+          <div className="loading-more">
+            <div className="loading-spinner-small" />
+            <span>더 많은 메모를 불러오는 중...</span>
+          </div>
+        )}
+        
+        {/* 더 이상 로드할 메모가 없을 때 표시 */}
+        {!hasMore && memos.length > 0 && (
+          <div className="no-more-memos">
+            <span>모든 메모를 불러왔습니다.</span>
+          </div>
         )}
       </div>
       <div className="collection-info">

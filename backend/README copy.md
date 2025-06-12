@@ -34,7 +34,7 @@ npm run dev
 
 4. 서버 확인
 ```
-http://localhost:5000
+http://localhost:3008
 ```
 
 ## API 엔드포인트

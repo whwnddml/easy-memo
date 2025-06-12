@@ -102,16 +102,39 @@ app.head('/api/memos', (req, res) => {
   }
 });
 
-// 메모 목록 조회 (JWT 인증 필요)
+// 메모 목록 조회 (JWT 인증 필요, 페이징 지원)
 app.get('/api/memos', authenticateToken, async (req, res, next) => {
   try {
     // JWT 토큰에서 추출한 사용자 ID 사용
     const userId = req.userId;
+    
+    // 페이징 파라미터
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
 
+    // 메모 조회 (페이징 적용)
     const memos = await Memo.find({ userId })
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .select('content createdAt updatedAt');
-    res.json(memos);
+
+    // 전체 메모 개수 조회
+    const totalCount = await Memo.countDocuments({ userId });
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasMore = page < totalPages;
+
+    res.json({
+      memos,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasMore,
+        limit
+      }
+    });
   } catch (error) {
     next(error);
   }
