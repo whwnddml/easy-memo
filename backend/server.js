@@ -70,6 +70,10 @@ const connectDB = async () => {
 // 초기 MongoDB 연결
 connectDB();
 
+// 라우터 등록
+const usersRouter = require('./routes/users');
+app.use('/api/users', usersRouter);
+
 // 에러 핸들러 미들웨어
 const errorHandler = (err, req, res, next) => {
   console.error('에러 발생:', {
