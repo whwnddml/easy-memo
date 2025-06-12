@@ -3,6 +3,15 @@ const router = express.Router();
 const User = require('../models/User');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+// JWT 시크릿 키 (실제 운영에서는 환경변수로 관리)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// JWT 토큰 생성 함수
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+};
 
 // 사용자 목록 조회
 router.get('/', async (req, res, next) => {
@@ -89,11 +98,19 @@ router.post('/', async (req, res, next) => {
     const user = new User(userData);
     const savedUser = await user.save();
     
+    // JWT 토큰 생성
+    const token = generateToken(savedUser._id);
+    
     // 응답에서 패스워드 제외
     const userResponse = savedUser.toObject();
     delete userResponse.password;
     
-    res.status(201).json(userResponse);
+    res.status(201).json({
+      message: '회원가입 성공',
+      token,
+      userId: savedUser._id,
+      user: userResponse
+    });
   } catch (error) {
     if (error.code === 11000) {
       // MongoDB 중복 키 에러
@@ -245,12 +262,17 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ message: '이메일 또는 패스워드가 올바르지 않습니다.' });
     }
 
+    // JWT 토큰 생성
+    const token = generateToken(user._id);
+
     // 응답에서 패스워드 제외
     const userResponse = user.toObject();
     delete userResponse.password;
 
     res.json({
       message: '로그인 성공',
+      token,
+      userId: user._id,
       user: userResponse
     });
   } catch (error) {
@@ -295,12 +317,17 @@ router.post('/social-login', async (req, res, next) => {
       await user.save();
     }
 
+    // JWT 토큰 생성
+    const token = generateToken(user._id);
+
     // 응답에서 패스워드 제외
     const userResponse = user.toObject();
     delete userResponse.password;
 
     res.json({
       message: '소셜 로그인 성공',
+      token,
+      userId: user._id,
       user: userResponse
     });
   } catch (error) {
@@ -311,6 +338,38 @@ router.post('/social-login', async (req, res, next) => {
       if (error.keyPattern.socialKey) {
         return res.status(409).json({ message: '이미 존재하는 소셜 계정입니다.' });
       }
+    }
+    next(error);
+  }
+});
+
+// 토큰 검증 API
+router.post('/verify-token', async (req, res, next) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: '토큰이 필요합니다.' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-password');
+
+    if (!user) {
+      return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+    }
+
+    res.json({
+      message: '토큰 검증 성공',
+      userId: user._id,
+      user
+    });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: '토큰이 만료되었습니다.' });
     }
     next(error);
   }

@@ -1,219 +1,276 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { useAuthStore } from './authStore'
 
-const API_URL = 'https://junny.dyndns.org:3008/api'
-
-interface Memo {
-  id: string;
-  content: string;
-  userId: string;
-  createdAt: string;
-  isOffline?: boolean;
+export interface Memo {
+  id: string
+  content: string
+  createdAt: string
+  updatedAt?: string
 }
 
 interface MemoStore {
-  memos: Memo[];
-  isLoading: boolean;
-  isHydrated: boolean;
-  fetchMemos: () => Promise<void>;
-  addMemo: (memo: Omit<Memo, 'id'>) => Promise<void>;
-  updateMemo: (memo: Memo) => Promise<void>;
-  deleteMemo: (id: string) => Promise<void>;
+  memos: Memo[]
+  isLoading: boolean
+  error: string | null
+  fetchMemos: () => Promise<void>
+  addMemo: (memo: Omit<Memo, 'id' | 'createdAt'>) => Promise<void>
+  updateMemo: (memo: Memo) => Promise<void>
+  deleteMemo: (id: string) => Promise<void>
+  clearError: () => void
 }
 
-// 임시 userId (로그인 기능 전까지)
-const DEFAULT_USER_ID = '665f1c000000000000000000'
-const USER_ID_KEY = 'easymemo_userId'
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://junny.dyndns.org:3008'
+  : 'http://localhost:3008';
 
-let cachedUserId = DEFAULT_USER_ID
-if (typeof window !== 'undefined') {
-  let userId = localStorage.getItem(USER_ID_KEY)
-  if (!userId) {
-    userId = DEFAULT_USER_ID
-    localStorage.setItem(USER_ID_KEY, userId)
-  }
-  cachedUserId = userId
-}
+// 로컬 스토리지에서 메모 관리
+const getLocalMemos = (): Memo[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('local-memos');
+  return stored ? JSON.parse(stored) : [];
+};
 
-function getUserId() {
-  return cachedUserId
-}
+const setLocalMemos = (memos: Memo[]) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('local-memos', JSON.stringify(memos));
+};
 
-// UUID v4 생성 함수
-function generateUUID() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
+// 고유 ID 생성
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
 
-// 서버 연결 상태 체크 함수
-async function checkServerConnection(): Promise<boolean> {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => {
-      controller.abort()
-    }, 5000)  // 5초 타임아웃
-    
-    const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json'
+// 사용자 ID 가져오기 (로그인 상태에 따라)
+const getUserId = () => {
+  const authState = useAuthStore.getState();
+  return authState.isAuthenticated ? authState.userId : null;
+};
+
+export const useMemoStore = create<MemoStore>()(
+  persist(
+    (set, get) => ({
+      memos: [],
+      isLoading: false,
+      error: null,
+
+      fetchMemos: async () => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const userId = getUserId();
+          
+          if (!userId) {
+            // 로그인하지 않은 경우 로컬 스토리지에서 가져오기
+            const localMemos = getLocalMemos();
+            set({ memos: localMemos, isLoading: false });
+            return;
+          }
+
+          // 로그인한 경우 서버에서 가져오기
+          const response = await fetch(`${API_URL}/api/memos?userId=${userId}`, {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            throw new Error('메모를 불러오는데 실패했습니다.');
+          }
+
+          const serverMemos = await response.json();
+          const memos = serverMemos.map((memo: any) => ({
+            id: memo._id,
+            content: memo.content,
+            createdAt: memo.createdAt,
+            updatedAt: memo.updatedAt
+          }));
+
+          set({ memos, isLoading: false });
+        } catch (error) {
+          console.error('메모 목록 조회 중 오류:', error);
+          set({ 
+            error: error instanceof Error ? error.message : '메모를 불러오는데 실패했습니다.',
+            isLoading: false 
+          });
+        }
       },
-      mode: 'cors',
-      credentials: 'include'
-    })
-    
-    clearTimeout(timeoutId)
-    return response.ok
-  } catch (error) {
-    console.error('서버 연결 체크 오류:', error)
-    return false
-  }
-}
 
-const useMemoStore = create<MemoStore>((set) => ({
-  memos: [],
-  isLoading: false,
-  isHydrated: true,
+      addMemo: async (memo) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const userId = getUserId();
+          const newMemo: Memo = {
+            id: generateId(),
+            content: memo.content,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
 
-  fetchMemos: async () => {
-    set({ isLoading: true });
-    try {
-      const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
-        headers: {
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('메모 목록을 불러오는데 실패했습니다.');
-      }
-      const data = await response.json();
-      set({ 
-        memos: data.map((memo: any) => ({
-          id: memo._id,
-          content: memo.content,
-          userId: memo.userId || getUserId(),
-          createdAt: memo.createdAt,
-          isOffline: false
-        }))
-      });
-    } catch (error) {
-      console.error('메모 목록 조회 중 오류:', error);
-      alert('메모 목록을 불러오는데 실패했습니다.');
-    } finally {
-      set({ isLoading: false });
+          if (!userId) {
+            // 로그인하지 않은 경우 로컬 스토리지에 저장
+            const currentMemos = get().memos;
+            const updatedMemos = [newMemo, ...currentMemos];
+            setLocalMemos(updatedMemos);
+            set({ memos: updatedMemos, isLoading: false });
+            return;
+          }
+
+          // 로그인한 경우 서버에 저장
+          const response = await fetch(`${API_URL}/api/memos`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'include',
+            body: JSON.stringify({
+              userId,
+              content: memo.content
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('메모 저장에 실패했습니다.');
+          }
+
+          const savedMemo = await response.json();
+          const formattedMemo: Memo = {
+            id: savedMemo._id,
+            content: savedMemo.content,
+            createdAt: savedMemo.createdAt,
+            updatedAt: savedMemo.updatedAt
+          };
+
+          const currentMemos = get().memos;
+          set({ memos: [formattedMemo, ...currentMemos], isLoading: false });
+        } catch (error) {
+          console.error('메모 추가 중 오류:', error);
+          set({ 
+            error: error instanceof Error ? error.message : '메모 저장에 실패했습니다.',
+            isLoading: false 
+          });
+        }
+      },
+
+      updateMemo: async (memo) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const userId = getUserId();
+
+          if (!userId) {
+            // 로그인하지 않은 경우 로컬 스토리지에서 수정
+            const currentMemos = get().memos;
+            const updatedMemos = currentMemos.map(m => 
+              m.id === memo.id 
+                ? { ...memo, updatedAt: new Date().toISOString() }
+                : m
+            );
+            setLocalMemos(updatedMemos);
+            set({ memos: updatedMemos, isLoading: false });
+            return;
+          }
+
+          // 로그인한 경우 서버에서 수정
+          const response = await fetch(`${API_URL}/api/memos/${memo.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'include',
+            body: JSON.stringify({
+              userId,
+              content: memo.content
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('메모 수정에 실패했습니다.');
+          }
+
+          const updatedMemo = await response.json();
+          const formattedMemo: Memo = {
+            id: updatedMemo._id,
+            content: updatedMemo.content,
+            createdAt: updatedMemo.createdAt,
+            updatedAt: updatedMemo.updatedAt
+          };
+
+          const currentMemos = get().memos;
+          const updatedMemos = currentMemos.map(m => 
+            m.id === memo.id ? formattedMemo : m
+          );
+          
+          set({ memos: updatedMemos, isLoading: false });
+        } catch (error) {
+          console.error('메모 수정 중 오류:', error);
+          set({ 
+            error: error instanceof Error ? error.message : '메모 수정에 실패했습니다.',
+            isLoading: false 
+          });
+        }
+      },
+
+      deleteMemo: async (id) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const userId = getUserId();
+
+          if (!userId) {
+            // 로그인하지 않은 경우 로컬 스토리지에서 삭제
+            const currentMemos = get().memos;
+            const updatedMemos = currentMemos.filter(m => m.id !== id);
+            setLocalMemos(updatedMemos);
+            set({ memos: updatedMemos, isLoading: false });
+            return;
+          }
+
+          // 로그인한 경우 서버에서 삭제
+          const response = await fetch(`${API_URL}/api/memos/${id}?userId=${userId}`, {
+            method: 'DELETE',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            throw new Error('메모 삭제에 실패했습니다.');
+          }
+
+          const currentMemos = get().memos;
+          const updatedMemos = currentMemos.filter(m => m.id !== id);
+          set({ memos: updatedMemos, isLoading: false });
+        } catch (error) {
+          console.error('메모 삭제 중 오류:', error);
+          set({ 
+            error: error instanceof Error ? error.message : '메모 삭제에 실패했습니다.',
+            isLoading: false 
+          });
+        }
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+    }),
+    {
+      name: 'memo-storage',
+      partialize: (state) => ({
+        // 로그인하지 않은 경우에만 로컬 스토리지에 메모 저장
+        memos: getUserId() ? [] : state.memos,
+      }),
     }
-  },
-
-  addMemo: async (memo) => {
-    set({ isLoading: true });
-    try {
-      const response = await fetch(`${API_URL}/memos?userId=${getUserId()}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
-        credentials: 'include',
-        body: JSON.stringify({
-          content: memo.content,
-          userId: getUserId()
-        }),
-      });
-      if (!response.ok) {
-        throw new Error('메모 추가에 실패했습니다.');
-      }
-      const newMemo = await response.json();
-      set((state) => ({
-        memos: [{
-          id: newMemo._id,
-          content: newMemo.content,
-          userId: newMemo.userId || getUserId(),
-          createdAt: newMemo.createdAt,
-          isOffline: false
-        }, ...state.memos],
-      }));
-    } catch (error) {
-      console.error('메모 추가 중 오류:', error);
-      alert('메모 추가에 실패했습니다.');
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  updateMemo: async (memo) => {
-    set({ isLoading: true });
-    try {
-      const response = await fetch(`${API_URL}/memos/${memo.id}?userId=${getUserId()}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
-        credentials: 'include',
-        body: JSON.stringify({
-          content: memo.content,
-          userId: getUserId()
-        }),
-      });
-      if (!response.ok) {
-        throw new Error('메모 수정에 실패했습니다.');
-      }
-      const updatedMemo = await response.json();
-      set((state) => ({
-        memos: state.memos.map((m) => 
-          m.id === memo.id 
-            ? {
-                id: updatedMemo._id,
-                content: updatedMemo.content,
-                userId: updatedMemo.userId || getUserId(),
-                createdAt: updatedMemo.createdAt,
-                isOffline: false
-              }
-            : m
-        ),
-      }));
-    } catch (error) {
-      console.error('메모 수정 중 오류:', error);
-      alert('메모 수정에 실패했습니다.');
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  deleteMemo: async (id) => {
-    set({ isLoading: true });
-    try {
-      const response = await fetch(`${API_URL}/memos/${id}?userId=${getUserId()}`, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
-        credentials: 'include'
-      });
-      if (!response.ok) {
-        throw new Error('메모 삭제에 실패했습니다.');
-      }
-      set((state) => ({
-        memos: state.memos.filter((memo) => memo.id !== id),
-      }));
-    } catch (error) {
-      console.error('메모 삭제 중 오류:', error);
-      alert('메모 삭제에 실패했습니다.');
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-}))
-
-export { useMemoStore, getUserId }
-export type { Memo } 
+  )
+); 

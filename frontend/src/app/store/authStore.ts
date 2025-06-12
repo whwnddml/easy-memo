@@ -1,31 +1,155 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
 export interface User {
-  userId: string;
+  _id: string;
   email: string;
+  socialProvider?: string;
+  createdAt: string;
 }
 
 interface AuthState {
-  token: string | null;
-  user: User | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;
+  token: string | null;
+  userId: string | null;
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
-export const useAuthStore = create<AuthState>()(
+interface AuthActions {
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  verifyToken: () => Promise<boolean>;
+  clearError: () => void;
+  setLoading: (loading: boolean) => void;
+}
+
+type AuthStore = AuthState & AuthActions;
+
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://junny.dyndns.org:3008'
+  : 'http://localhost:3008';
+
+export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => ({
-      token: null,
-      user: null,
+    (set, get) => ({
+      // 초기 상태
       isAuthenticated: false,
-      login: (token, user) => set({ token, user, isAuthenticated: true }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+      token: null,
+      userId: null,
+      user: null,
+      isLoading: false,
+      error: null,
+
+      // 로그인
+      login: async (email: string, password: string) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const response = await fetch(`${API_URL}/api/users/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || '로그인에 실패했습니다.');
+          }
+
+          set({
+            isAuthenticated: true,
+            token: data.token,
+            userId: data.userId,
+            user: data.user,
+            isLoading: false,
+            error: null,
+          });
+
+          return true;
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : '로그인에 실패했습니다.',
+          });
+          return false;
+        }
+      },
+
+      // 로그아웃
+      logout: () => {
+        set({
+          isAuthenticated: false,
+          token: null,
+          userId: null,
+          user: null,
+          error: null,
+        });
+      },
+
+      // 토큰 검증
+      verifyToken: async () => {
+        const { token } = get();
+        
+        if (!token) {
+          return false;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/api/users/verify-token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || '토큰 검증에 실패했습니다.');
+          }
+
+          set({
+            isAuthenticated: true,
+            userId: data.userId,
+            user: data.user,
+          });
+
+          return true;
+        } catch (error) {
+          set({
+            isAuthenticated: false,
+            token: null,
+            userId: null,
+            user: null,
+          });
+          return false;
+        }
+      },
+
+      // 에러 클리어
+      clearError: () => {
+        set({ error: null });
+      },
+
+      // 로딩 상태 설정
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      },
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        token: state.token,
+        userId: state.userId,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 ); 

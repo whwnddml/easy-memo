@@ -40,7 +40,7 @@ easymemo/
 ├── frontend/          # Next.js PWA 프론트엔드
 │   ├── public/       # 정적 파일
 │   └── src/         # 소스 코드
-└── backend/          # Express.js 백엔드
+└── backend/          # Node.js, Express.js 백엔드
     └── src/         # 소스 코드
 ```
 
