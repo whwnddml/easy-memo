@@ -68,12 +68,14 @@ export default function MemoList() {
   const handleScroll = useCallback(() => {
     if (isLoading || isLoadingMore || !hasMore) return;
 
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.offsetHeight;
+    const scrollElement = document.querySelector('.memo-list-container');
+    if (!scrollElement) return;
 
-    // 하단에서 100px 이내에 도달하면 추가 로드
-    if (scrollTop + windowHeight >= documentHeight - 100) {
+    const { scrollTop, clientHeight, scrollHeight } = scrollElement;
+    
+    // 스크롤이 하단에서 50px 이내에 도달하면 추가 로드
+    if (scrollHeight - (scrollTop + clientHeight) <= 50) {
+      console.log('Loading more memos...');
       loadMoreMemos();
     }
   }, [isLoading, isLoadingMore, hasMore, loadMoreMemos]);

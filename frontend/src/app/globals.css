@@ -143,6 +143,29 @@ h1 {
   flex: 1;
   position: relative;
   overflow-y: auto;
+  max-height: calc(100vh - 200px); /* 헤더와 기타 요소를 고려한 높이 */
+  padding: 0 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #4f8cff #f0f0f0;
+}
+
+/* Webkit 브라우저용 스크롤바 스타일 */
+.memo-list-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.memo-list-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.memo-list-container::-webkit-scrollbar-thumb {
+  background: #4f8cff;
+  border-radius: 4px;
+}
+
+.memo-list-container::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
 }
 
 .loading-overlay {
