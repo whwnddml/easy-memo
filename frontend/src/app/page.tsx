@@ -54,7 +54,7 @@ function HomeContent() {
 
   return (
     <main className="container">
-      <div className="header">
+      <div className="header" style={{flexDirection: 'column', alignItems: 'flex-start', gap: '8px'}}>
         <h1>EasyMemo</h1>
         <div className="user-info">
           {isAuthenticated ? (
