@@ -14,7 +14,7 @@ app.use(cors({
   origin: ['https://whwnddml.github.io', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Accept', 'Origin', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Accept', 'Origin', 'X-Requested-With', 'Authorization'],
   exposedHeaders: ['Access-Control-Allow-Origin'],
   preflightContinue: false,
   optionsSuccessStatus: 204
@@ -70,6 +70,9 @@ const connectDB = async () => {
 // 초기 MongoDB 연결
 connectDB();
 
+// 인증 미들웨어 import
+const { authenticateToken } = require('./middleware/auth');
+
 // 라우터 등록
 const usersRouter = require('./routes/users');
 app.use('/api/users', usersRouter);
@@ -99,25 +102,13 @@ app.head('/api/memos', (req, res) => {
   }
 });
 
-// 메모 목록 조회 (userId 기반)
-app.get('/api/memos', async (req, res, next) => {
+// 메모 목록 조회 (JWT 인증 필요)
+app.get('/api/memos', authenticateToken, async (req, res, next) => {
   try {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ message: 'userId는 필수입니다' });
+    // JWT 토큰에서 추출한 사용자 ID 사용
+    const userId = req.userId;
 
-    // userId가 ObjectId가 아닌 경우 임시 사용자로 처리
-    let finalUserId = userId;
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      // 임시 사용자 ID로 조회
-      let user = await User.findOne({ email: userId });
-      if (!user) {
-        // 임시 사용자 생성
-        user = await User.create({ email: userId });
-      }
-      finalUserId = user._id;
-    }
-
-    const memos = await Memo.find({ userId: finalUserId })
+    const memos = await Memo.find({ userId })
       .sort({ createdAt: -1 })
       .select('content createdAt updatedAt');
     res.json(memos);
@@ -126,30 +117,19 @@ app.get('/api/memos', async (req, res, next) => {
   }
 });
 
-// 메모 생성 (email → userId 자동 발급)
-app.post('/api/memos', async (req, res, next) => {
+// 메모 생성 (JWT 인증 필요)
+app.post('/api/memos', authenticateToken, async (req, res, next) => {
   try {
-    // userId를 body 또는 query에서 모두 허용
-    const userIdFromBody = req.body.userId;
-    const userIdFromQuery = req.query.userId;
-    const { email, content } = req.body;
-    let finalUserId = userIdFromBody || userIdFromQuery;
-    // userId가 없고 email이 있으면 userId 발급
-    if (!finalUserId && email) {
-      let user = await User.findOne({ email });
-      if (!user) {
-        user = await User.create({ email });
-      }
-      finalUserId = user._id;
-    }
+    // JWT 토큰에서 추출한 사용자 ID 사용
+    const userId = req.userId;
+    const { content } = req.body;
+    
     if (!content || content.trim() === '') {
       return res.status(400).json({ message: '메모 내용은 필수입니다' });
     }
-    if (!finalUserId) {
-      return res.status(400).json({ message: 'userId 또는 email이 필요합니다' });
-    }
+    
     const memo = new Memo({
-      userId: finalUserId,
+      userId,
       content: content.trim()
     });
     const savedMemo = await memo.save();
@@ -159,14 +139,16 @@ app.post('/api/memos', async (req, res, next) => {
   }
 });
 
-// 메모 삭제 (userId 체크)
-app.delete('/api/memos/:id', async (req, res, next) => {
+// 메모 삭제 (JWT 인증 필요)
+app.delete('/api/memos/:id', authenticateToken, async (req, res, next) => {
   try {
-    const { userId } = req.query;
+    // JWT 토큰에서 추출한 사용자 ID 사용
+    const userId = req.userId;
+    
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: '잘못된 메모 ID입니다' });
     }
-    if (!userId) return res.status(400).json({ message: 'userId는 필수입니다' });
+    
     const deletedMemo = await Memo.findOneAndDelete({ _id: req.params.id, userId });
     if (!deletedMemo) {
       return res.status(404).json({ message: '메모를 찾을 수 없습니다' });
@@ -177,17 +159,21 @@ app.delete('/api/memos/:id', async (req, res, next) => {
   }
 });
 
-// 메모 수정 (userId 체크)
-app.put('/api/memos/:id', async (req, res, next) => {
+// 메모 수정 (JWT 인증 필요)
+app.put('/api/memos/:id', authenticateToken, async (req, res, next) => {
   try {
-    const { userId, content } = req.body;
+    // JWT 토큰에서 추출한 사용자 ID 사용
+    const userId = req.userId;
+    const { content } = req.body;
+    
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: '잘못된 메모 ID입니다' });
     }
-    if (!userId) return res.status(400).json({ message: 'userId는 필수입니다' });
+    
     if (!content || content.trim() === '') {
       return res.status(400).json({ message: '메모 내용은 필수입니다' });
     }
+    
     const updatedMemo = await Memo.findOneAndUpdate(
       { _id: req.params.id, userId },
       { content: content.trim(), updatedAt: new Date() },

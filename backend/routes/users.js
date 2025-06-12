@@ -4,6 +4,7 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { authenticateToken } = require('../middleware/auth');
 
 // JWT 시크릿 키 (실제 운영에서는 환경변수로 관리)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -344,19 +345,13 @@ router.post('/social-login', async (req, res, next) => {
 });
 
 // 토큰 검증 API
-router.post('/verify-token', async (req, res, next) => {
+router.post('/verify-token', authenticateToken, async (req, res, next) => {
   try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({ message: '토큰이 필요합니다.' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
+    // JWT 미들웨어에서 이미 토큰을 검증했으므로 사용자 정보만 반환
+    const user = await User.findById(req.userId).select('-password');
 
     if (!user) {
-      return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+      return res.status(401).json({ message: '사용자를 찾을 수 없습니다.' });
     }
 
     res.json({
@@ -365,12 +360,6 @@ router.post('/verify-token', async (req, res, next) => {
       user
     });
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
-    }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: '토큰이 만료되었습니다.' });
-    }
     next(error);
   }
 });

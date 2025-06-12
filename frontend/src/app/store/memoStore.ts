@@ -48,6 +48,27 @@ const getUserId = () => {
   return authState.isAuthenticated ? authState.userId : null;
 };
 
+// JWT 토큰 가져오기
+const getAuthToken = () => {
+  const authState = useAuthStore.getState();
+  return authState.isAuthenticated ? authState.token : null;
+};
+
+// 인증 헤더 생성
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
+
 export const useMemoStore = create<MemoStore>()(
   persist(
     (set, get) => ({
@@ -69,11 +90,8 @@ export const useMemoStore = create<MemoStore>()(
           }
 
           // 로그인한 경우 서버에서 가져오기
-          const response = await fetch(`${API_URL}/api/memos?userId=${userId}`, {
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
+          const response = await fetch(`${API_URL}/api/memos`, {
+            headers: getAuthHeaders(),
             mode: 'cors',
             credentials: 'include'
           });
@@ -124,14 +142,10 @@ export const useMemoStore = create<MemoStore>()(
           // 로그인한 경우 서버에 저장
           const response = await fetch(`${API_URL}/api/memos`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
+            headers: getAuthHeaders(),
             mode: 'cors',
             credentials: 'include',
             body: JSON.stringify({
-              userId,
               content: memo.content
             }),
           });
@@ -181,14 +195,10 @@ export const useMemoStore = create<MemoStore>()(
           // 로그인한 경우 서버에서 수정
           const response = await fetch(`${API_URL}/api/memos/${memo.id}`, {
             method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
+            headers: getAuthHeaders(),
             mode: 'cors',
             credentials: 'include',
             body: JSON.stringify({
-              userId,
               content: memo.content
             }),
           });
@@ -236,12 +246,9 @@ export const useMemoStore = create<MemoStore>()(
           }
 
           // 로그인한 경우 서버에서 삭제
-          const response = await fetch(`${API_URL}/api/memos/${id}?userId=${userId}`, {
+          const response = await fetch(`${API_URL}/api/memos/${id}`, {
             method: 'DELETE',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             mode: 'cors',
             credentials: 'include'
           });
