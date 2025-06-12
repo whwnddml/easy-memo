@@ -113,20 +113,32 @@ app.get('/api/memos', authenticateToken, async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    // 메모 조회 (페이징 적용)
-    const memos = await Memo.find({ userId })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select('content createdAt updatedAt');
+    // 메모 조회 쿼리 생성
+    const query = { userId };
 
-    // 전체 메모 개수 조회
-    const totalCount = await Memo.countDocuments({ userId });
+    // 메모 조회 (페이징 적용)
+    const [memos, totalCount] = await Promise.all([
+      Memo.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('content createdAt updatedAt')
+        .lean(),
+      Memo.countDocuments(query)
+    ]);
+
+    // 페이징 정보 계산
     const totalPages = Math.ceil(totalCount / limit);
     const hasMore = page < totalPages;
 
+    // 응답 데이터 구성
     res.json({
-      memos,
+      memos: memos.map(memo => ({
+        _id: memo._id,
+        content: memo.content,
+        createdAt: memo.createdAt,
+        updatedAt: memo.updatedAt
+      })),
       pagination: {
         currentPage: page,
         totalPages,

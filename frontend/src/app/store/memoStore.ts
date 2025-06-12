@@ -230,13 +230,8 @@ export const useMemoStore = create<MemoStore>()(
             updatedAt: savedMemo.updatedAt
           };
 
-          const currentMemos = get().memos;
-          set({ 
-            memos: [formattedMemo, ...currentMemos], 
-            isLoading: false,
-            currentPage: 1,
-            hasMore: true
-          });
+          // 새 메모 추가 후 첫 페이지 다시 로드
+          await get().fetchMemos(true);
         } catch (error) {
           console.error('메모 추가 중 오류:', error);
           set({ 
@@ -288,12 +283,8 @@ export const useMemoStore = create<MemoStore>()(
             updatedAt: updatedMemo.updatedAt
           };
 
-          const currentMemos = get().memos;
-          const updatedMemos = currentMemos.map(m => 
-            m.id === memo.id ? formattedMemo : m
-          );
-          
-          set({ memos: updatedMemos, isLoading: false });
+          // 메모 수정 후 현재 페이지 다시 로드
+          await get().fetchMemos(true);
         } catch (error) {
           console.error('메모 수정 중 오류:', error);
           set({ 
@@ -330,9 +321,8 @@ export const useMemoStore = create<MemoStore>()(
             throw new Error('메모 삭제에 실패했습니다.');
           }
 
-          const currentMemos = get().memos;
-          const updatedMemos = currentMemos.filter(m => m.id !== id);
-          set({ memos: updatedMemos, isLoading: false });
+          // 메모 삭제 후 현재 페이지 다시 로드
+          await get().fetchMemos(true);
         } catch (error) {
           console.error('메모 삭제 중 오류:', error);
           set({ 
