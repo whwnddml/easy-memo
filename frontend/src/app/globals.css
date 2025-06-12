@@ -143,10 +143,12 @@ h1 {
   flex: 1;
   position: relative;
   overflow-y: auto;
-  max-height: calc(100vh - 200px); /* 헤더와 기타 요소를 고려한 높이 */
+  height: calc(100vh - 250px); /* 헤더와 기타 요소를 고려한 높이 */
+  min-height: 300px; /* 최소 높이 설정 */
   padding: 0 10px;
   scrollbar-width: thin;
   scrollbar-color: #4f8cff #f0f0f0;
+  -webkit-overflow-scrolling: touch; /* iOS 스크롤 부드럽게 */
 }
 
 /* Webkit 브라우저용 스크롤바 스타일 */

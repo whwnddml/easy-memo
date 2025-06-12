@@ -64,21 +64,7 @@ export default function MemoList() {
     }
   }, [fetchMemos])
 
-  // 무한 스크롤 핸들러
-  const handleScroll = useCallback(() => {
-    if (isLoading || isLoadingMore || !hasMore) return;
 
-    const scrollElement = document.querySelector('.memo-list-container');
-    if (!scrollElement) return;
-
-    const { scrollTop, clientHeight, scrollHeight } = scrollElement;
-    
-    // 스크롤이 하단에서 50px 이내에 도달하면 추가 로드
-    if (scrollHeight - (scrollTop + clientHeight) <= 50) {
-      console.log('Loading more memos...');
-      loadMoreMemos();
-    }
-  }, [isLoading, isLoadingMore, hasMore, loadMoreMemos]);
 
   useEffect(() => {
     initializeMemos()
@@ -86,9 +72,22 @@ export default function MemoList() {
 
   // 스크롤 이벤트 리스너 등록
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll])
+    const scrollElement = document.querySelector('.memo-list-container');
+    if (!scrollElement) return;
+
+    const onScroll = () => {
+      const { scrollTop, clientHeight, scrollHeight } = scrollElement;
+      
+      // 스크롤이 하단에서 50px 이내에 도달하면 추가 로드
+      if (scrollHeight - (scrollTop + clientHeight) <= 50) {
+        console.log('Loading more memos...', { scrollTop, clientHeight, scrollHeight });
+        loadMoreMemos();
+      }
+    };
+
+    scrollElement.addEventListener('scroll', onScroll);
+    return () => scrollElement.removeEventListener('scroll', onScroll);
+  }, [loadMoreMemos, isLoading, isLoadingMore, hasMore])
 
   useEffect(() => {
     const collectSystemInfo = () => {
