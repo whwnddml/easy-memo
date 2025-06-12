@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useMemoStore } from '../store/memoStore'
 import { FaEdit, FaTrash } from 'react-icons/fa'
 
@@ -70,23 +70,25 @@ export default function MemoList() {
     initializeMemos()
   }, [initializeMemos])
 
-  // 스크롤 이벤트 리스너 등록
+  // 무한 스크롤을 위한 observer 설정
+  const observerTarget = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const scrollElement = document.querySelector('.memo-list-container');
-    if (!scrollElement) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoading && !isLoadingMore && hasMore) {
+          console.log('Observer triggered, loading more memos...');
+          loadMoreMemos();
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-    const onScroll = () => {
-      const { scrollTop, clientHeight, scrollHeight } = scrollElement;
-      
-      // 스크롤이 하단에서 50px 이내에 도달하면 추가 로드
-      if (scrollHeight - (scrollTop + clientHeight) <= 50) {
-        console.log('Loading more memos...', { scrollTop, clientHeight, scrollHeight });
-        loadMoreMemos();
-      }
-    };
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
 
-    scrollElement.addEventListener('scroll', onScroll);
-    return () => scrollElement.removeEventListener('scroll', onScroll);
+    return () => observer.disconnect();
   }, [loadMoreMemos, isLoading, isLoadingMore, hasMore])
 
   useEffect(() => {
@@ -401,6 +403,18 @@ export default function MemoList() {
           </div>
         )}
         
+        {/* Intersection Observer Target */}
+        {hasMore && (
+          <div ref={observerTarget} className="observer-target">
+            {isLoadingMore && (
+              <div className="loading-more">
+                <div className="loading-spinner-small" />
+                <span>더 많은 메모를 불러오는 중...</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 더 이상 로드할 메모가 없을 때 표시 */}
         {!hasMore && memos.length > 0 && (
           <div className="no-more-memos">
