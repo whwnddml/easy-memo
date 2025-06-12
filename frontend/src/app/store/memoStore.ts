@@ -18,6 +18,7 @@ interface MemoStore {
   updateMemo: (memo: Memo) => Promise<void>
   deleteMemo: (id: string) => Promise<void>
   clearError: () => void
+  clearMemos: () => void
 }
 
 const API_URL = process.env.NODE_ENV === 'production' 
@@ -263,6 +264,10 @@ export const useMemoStore = create<MemoStore>()(
 
       clearError: () => {
         set({ error: null });
+      },
+
+      clearMemos: () => {
+        set({ memos: [], error: null });
       },
     }),
     {

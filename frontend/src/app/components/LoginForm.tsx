@@ -1,13 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../store/authStore';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter();
   
   const { login, isLoading, error, clearError } = useAuthStore();
 
@@ -19,16 +17,7 @@ export default function LoginForm() {
       return;
     }
 
-    const success = await login(email.trim(), password);
-    
-    if (success) {
-      router.push('/');
-    }
-  };
-
-  const handleGuestMode = () => {
-    // 게스트 모드로 메인 페이지 이동
-    router.push('/');
+    await login(email.trim(), password);
   };
 
   return (
@@ -39,7 +28,7 @@ export default function LoginForm() {
             Easy Memo
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            로그인하여 개인 메모를 저장하거나 게스트로 이용하세요
+            로그인하여 개인 메모를 관리하세요
           </p>
         </div>
         
@@ -87,22 +76,13 @@ export default function LoginForm() {
             </div>
           )}
 
-          <div className="space-y-3">
+          <div>
             <button
               type="submit"
               disabled={isLoading || !email.trim() || !password.trim()}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? '로그인 중...' : '로그인'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleGuestMode}
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              게스트로 이용하기 (로컬 저장)
             </button>
           </div>
 
