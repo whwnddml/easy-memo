@@ -308,24 +308,30 @@ export default function MemoList() {
 
   // 스크롤 이벤트 핸들러 (iOS가 아닌 환경용)
   const handleScroll = useCallback(async () => {
-    if (ios || loadingRef.current || !hasMore || isLoading) {
+    // 기본 조건 체크
+    if (ios || !hasMore || isLoading) {
+      console.log('스크롤 무시:', { ios, hasMore, isLoading });
       return;
     }
 
-    const scrollPosition = window.scrollY || window.pageYOffset;
+    // 스크롤 위치 계산
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
-    const scrolledToBottom = documentHeight - (scrollPosition + windowHeight) < 100;
-    const hasScrollbar = documentHeight > windowHeight;
+    const distanceToBottom = documentHeight - (scrollTop + windowHeight);
     
-    // 스크롤바가 있고, 스크롤이 하단에 도달했을 때만 추가 로드
-    if (hasScrollbar && scrolledToBottom) {
-      loadingRef.current = true;
-      try {
-        await loadMoreMemos();
-      } finally {
-        loadingRef.current = false;
-      }
+    console.log('스크롤 상태:', {
+      scrollTop,
+      windowHeight,
+      documentHeight,
+      distanceToBottom,
+      hasMore
+    });
+
+    // 하단에서 150px 이내일 때 추가 로드
+    if (distanceToBottom < 150) {
+      console.log('하단 감지, 추가 로드 시도');
+      await loadMoreMemos();
     }
   }, [ios, hasMore, isLoading, loadMoreMemos]);
 
