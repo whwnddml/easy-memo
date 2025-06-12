@@ -308,15 +308,17 @@ export default function MemoList() {
 
   // 스크롤 이벤트 핸들러 (iOS가 아닌 환경용)
   const handleScroll = useCallback(async () => {
-    if (ios || !listContainerRef.current || loadingRef.current || !hasMore || isLoading) {
+    if (ios || loadingRef.current || !hasMore || isLoading) {
       return;
     }
 
-    const container = listContainerRef.current;
-    const { scrollTop, clientHeight, scrollHeight } = container;
+    const scrollPosition = window.scrollY || window.pageYOffset;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
     
-    // 스크롤이 하단에서 50px 이내일 때
-    if (scrollHeight - scrollTop - clientHeight < 50) {
+    // 스크롤이 하단에서 100px 이내일 때
+    if (documentHeight - (scrollPosition + windowHeight) < 100) {
+      console.log('스크롤 하단 감지, 추가 메모 로딩 시도');
       loadingRef.current = true;
       try {
         await loadMoreMemos();
@@ -328,10 +330,11 @@ export default function MemoList() {
 
   // 스크롤 이벤트 리스너 등록 (iOS가 아닌 환경용)
   useEffect(() => {
-    const container = listContainerRef.current;
-    if (!ios && container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
+    if (!ios) {
+      window.addEventListener('scroll', handleScroll);
+      // 초기 로드 시 스크롤 체크
+      handleScroll();
+      return () => window.removeEventListener('scroll', handleScroll);
     }
   }, [ios, handleScroll]);
 
