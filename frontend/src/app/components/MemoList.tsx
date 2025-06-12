@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useMemoStore } from '../store/memoStore'
 import { FaEdit, FaTrash, FaChevronDown, FaChevronUp, FaSync } from 'react-icons/fa'
 
@@ -302,30 +302,36 @@ export default function MemoList() {
   const ios = isIOS();
   const [currentPage, setCurrentPage] = useState(1);
 
+  // 스크롤 감지를 위한 ref
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef<boolean>(false);
+
   // 스크롤 이벤트 핸들러 (iOS가 아닌 환경용)
-  const handleScroll = useCallback(() => {
-    if (ios || isLoading || isLoadingMore || !hasMore) return;
-
-    const scrollHeight = Math.max(
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight
-    );
-    const scrollTop = Math.max(
-      document.documentElement.scrollTop,
-      document.body.scrollTop
-    );
-    const clientHeight = document.documentElement.clientHeight;
-
-    if (scrollHeight - scrollTop <= clientHeight + 100) {
-      loadMoreMemos();
+  const handleScroll = useCallback(async () => {
+    if (ios || !listContainerRef.current || loadingRef.current || !hasMore || isLoading) {
+      return;
     }
-  }, [ios, isLoading, isLoadingMore, hasMore, loadMoreMemos]);
+
+    const container = listContainerRef.current;
+    const { scrollTop, clientHeight, scrollHeight } = container;
+    
+    // 스크롤이 하단에서 50px 이내일 때
+    if (scrollHeight - scrollTop - clientHeight < 50) {
+      loadingRef.current = true;
+      try {
+        await loadMoreMemos();
+      } finally {
+        loadingRef.current = false;
+      }
+    }
+  }, [ios, hasMore, isLoading, loadMoreMemos]);
 
   // 스크롤 이벤트 리스너 등록 (iOS가 아닌 환경용)
   useEffect(() => {
-    if (!ios) {
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
+    const container = listContainerRef.current;
+    if (!ios && container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
     }
   }, [ios, handleScroll]);
 
@@ -352,7 +358,7 @@ export default function MemoList() {
   }, [hasMore, loadMoreMemos]);
 
   return (
-    <div className="memo-list-container">
+    <div className="memo-list-container" ref={listContainerRef}>
       {ios && (
         <div className="ios-controls">
           <button className="refresh-button" onClick={handleRefresh}>

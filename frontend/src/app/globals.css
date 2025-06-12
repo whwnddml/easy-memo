@@ -144,6 +144,9 @@ h1 {
   position: relative;
   min-height: 100px;
   padding: 0 10px;
+  height: calc(100vh - 300px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Webkit 브라우저용 스크롤바 스타일 */
