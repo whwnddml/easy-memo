@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useMemoStore } from '../store/memoStore'
 
-// 모바일 환경 감지
-const isMobile = () => {
+// 데스크톱 환경 감지
+const isDesktop = () => {
   if (typeof window === 'undefined') return false;
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  return !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
 export default function MemoForm() {
@@ -36,7 +36,7 @@ export default function MemoForm() {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={isMobile() ? "메모를 입력하세요..." : "메모를 입력하세요... (Ctrl+Enter로 저장)"}
+        placeholder={isDesktop() ? "메모를 입력하세요... (Ctrl+Enter로 저장)" : "메모를 입력하세요..."}
         disabled={isLoading}
         className="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         rows={4}
