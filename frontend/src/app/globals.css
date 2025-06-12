@@ -142,13 +142,8 @@ h1 {
 .memo-list-container {
   flex: 1;
   position: relative;
-  overflow-y: auto;
-  height: calc(100vh - 250px); /* 헤더와 기타 요소를 고려한 높이 */
-  min-height: 300px; /* 최소 높이 설정 */
+  min-height: 100px;
   padding: 0 10px;
-  scrollbar-width: thin;
-  scrollbar-color: #4f8cff #f0f0f0;
-  -webkit-overflow-scrolling: touch; /* iOS 스크롤 부드럽게 */
 }
 
 /* Webkit 브라우저용 스크롤바 스타일 */
@@ -614,55 +609,4 @@ h1 {
   margin: 10px 0;
 }
 
-/* iOS PWA 새로고침 버튼 */
-.refresh-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: #4f8cff;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 10px 0;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.refresh-button:active {
-  transform: scale(0.98);
-  background: #2563eb;
-}
-
-.refresh-button svg {
-  width: 16px;
-  height: 16px;
-}
-
-.refresh-button .spinning {
-  animation: spin 1s linear infinite;
-}
-
-/* iOS PWA 스크롤 최적화 */
-@supports (-webkit-touch-callout: none) {
-  .memo-list-container {
-    /* iOS 모멘텀 스크롤 활성화 */
-    -webkit-overflow-scrolling: touch;
-    /* iOS 바운스 효과 비활성화 */
-    overscroll-behavior-y: none;
-    /* iOS 러버밴드 효과 비활성화 */
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .memo-list {
-    padding-bottom: 100px; /* iOS에서 하단 여백 추가 */
-  }
-} 
+ 

@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useMemoStore } from '../store/memoStore'
-import { FaEdit, FaTrash, FaSync } from 'react-icons/fa'
-import { isIOSPWA } from '../utils/deviceDetect'
+import { FaEdit, FaTrash } from 'react-icons/fa'
 
 // 모바일 환경 감지 함수
 const isMobile = () => {
@@ -71,25 +70,22 @@ export default function MemoList() {
     initializeMemos()
   }, [initializeMemos])
 
-  // 무한 스크롤을 위한 observer 설정
-  const observerTarget = useRef<HTMLDivElement>(null);
-
+  // 무한 스크롤 처리
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoading && !isLoadingMore && hasMore) {
-          console.log('Observer triggered, loading more memos...');
-          loadMoreMemos();
-        }
-      },
-      { threshold: 0.1 }
-    );
+    const handleScroll = () => {
+      if (isLoading || isLoadingMore || !hasMore) return;
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
 
-    return () => observer.disconnect();
+      if (scrollHeight - scrollTop <= clientHeight + 100) {
+        loadMoreMemos();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [loadMoreMemos, isLoading, isLoadingMore, hasMore])
 
   useEffect(() => {
@@ -297,20 +293,8 @@ export default function MemoList() {
     return <div className="loading">로딩 중...</div>
   }
 
-  const isPWA = isIOSPWA();
-
-  const handleRefresh = useCallback(async () => {
-    await fetchMemos(true);
-  }, [fetchMemos]);
-
   return (
     <div className="memo-list-container">
-      {isPWA && (
-        <div className="refresh-button" onClick={handleRefresh}>
-          <FaSync className={isLoading ? 'spinning' : ''} />
-          <span>새로고침</span>
-        </div>
-      )}
       <div className={`loading-overlay ${isLoading ? 'visible' : ''}`}>
         <div className="loading-spinner" />
       </div>
@@ -416,15 +400,11 @@ export default function MemoList() {
           </div>
         )}
         
-        {/* Intersection Observer Target */}
-        {hasMore && (
-          <div ref={observerTarget} className="observer-target">
-            {isLoadingMore && (
-              <div className="loading-more">
-                <div className="loading-spinner-small" />
-                <span>더 많은 메모를 불러오는 중...</span>
-              </div>
-            )}
+        {/* 로딩 상태 표시 */}
+        {isLoadingMore && (
+          <div className="loading-more">
+            <div className="loading-spinner-small" />
+            <span>더 많은 메모를 불러오는 중...</span>
           </div>
         )}
 
