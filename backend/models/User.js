@@ -21,6 +21,12 @@ const userSchema = new mongoose.Schema({
     required: false,
     enum: ['google', 'facebook', 'kakao', 'naver', null]  // 소셜 로그인 제공자
   },
+  role: {
+    type: String,
+    required: true,
+    enum: ['user', 'admin'],
+    default: 'user'  // 기본값은 일반 사용자
+  },
   createdAt: { 
     type: Date, 
     default: Date.now, 

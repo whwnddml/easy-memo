@@ -4,7 +4,7 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authenticateAdmin } = require('../middleware/auth');
 
 // JWT 시크릿 키 (실제 운영에서는 환경변수로 관리)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -15,7 +15,7 @@ const generateToken = (userId) => {
 };
 
 // 사용자 목록 조회 (관리자 권한 필요)
-router.get('/', authenticateToken, async (req, res, next) => {
+router.get('/', authenticateAdmin, async (req, res, next) => {
   try {
     const users = await User.find()
       .sort({ createdAt: -1 })
@@ -84,8 +84,13 @@ router.post('/', async (req, res, next) => {
       }
     }
 
+    // 첫 번째 사용자는 자동으로 관리자로 설정
+    const userCount = await User.countDocuments();
+    const isFirstUser = userCount === 0;
+    
     const userData = {
-      email: email.trim()
+      email: email.trim(),
+      role: isFirstUser ? 'admin' : 'user'  // 첫 번째 사용자는 관리자
     };
 
     // 패스워드가 제공된 경우 해시화
@@ -358,6 +363,49 @@ router.post('/social-login', async (req, res, next) => {
         return res.status(409).json({ message: '이미 존재하는 소셜 계정입니다.' });
       }
     }
+    next(error);
+  }
+});
+
+// 사용자 역할 변경 API (관리자만 가능)
+router.patch('/:id/role', authenticateAdmin, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: '잘못된 사용자 ID입니다.' });
+    }
+
+    if (!role || !['user', 'admin'].includes(role)) {
+      return res.status(400).json({ message: '올바른 역할(user 또는 admin)을 지정해주세요.' });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 자기 자신의 관리자 권한은 제거할 수 없음 (최후의 관리자 보호)
+    if (id === req.userId && role === 'user') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount <= 1) {
+        return res.status(400).json({ message: '최후의 관리자는 권한을 제거할 수 없습니다.' });
+      }
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.json({
+      message: `사용자 역할이 ${role}로 변경되었습니다.`,
+      user: {
+        _id: user._id,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
     next(error);
   }
 });

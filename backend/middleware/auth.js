@@ -49,7 +49,39 @@ const optionalAuth = (req, res, next) => {
   });
 };
 
+// 관리자 권한 확인 미들웨어
+const requireAdmin = async (req, res, next) => {
+  const User = require('../models/User');
+  
+  try {
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(401).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+    
+    // 환경변수로 지정된 관리자 이메일 확인
+    const adminEmails = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',') : [];
+    const isEnvAdmin = adminEmails.includes(user.email);
+    
+    // DB role이 admin이거나 환경변수에 지정된 관리자인 경우
+    if (user.role === 'admin' || isEnvAdmin) {
+      req.userRole = 'admin';
+      return next();
+    }
+    
+    return res.status(403).json({ message: '관리자 권한이 필요합니다.' });
+  } catch (error) {
+    return res.status(500).json({ message: '권한 확인 중 오류가 발생했습니다.' });
+  }
+};
+
+// 인증과 관리자 권한을 동시에 확인하는 미들웨어
+const authenticateAdmin = [authenticateToken, requireAdmin];
+
 module.exports = {
   authenticateToken,
-  optionalAuth
+  optionalAuth,
+  requireAdmin,
+  authenticateAdmin
 }; 
