@@ -302,6 +302,33 @@ export default function MemoList() {
   const ios = isIOS();
   const [currentPage, setCurrentPage] = useState(1);
 
+  // 스크롤 이벤트 핸들러 (iOS가 아닌 환경용)
+  const handleScroll = useCallback(() => {
+    if (ios || isLoading || isLoadingMore || !hasMore) return;
+
+    const scrollHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight
+    );
+    const scrollTop = Math.max(
+      document.documentElement.scrollTop,
+      document.body.scrollTop
+    );
+    const clientHeight = document.documentElement.clientHeight;
+
+    if (scrollHeight - scrollTop <= clientHeight + 100) {
+      loadMoreMemos();
+    }
+  }, [ios, isLoading, isLoadingMore, hasMore, loadMoreMemos]);
+
+  // 스크롤 이벤트 리스너 등록 (iOS가 아닌 환경용)
+  useEffect(() => {
+    if (!ios) {
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [ios, handleScroll]);
+
   // 새로고침 핸들러
   const handleRefresh = useCallback(async () => {
     setCurrentPage(1);
