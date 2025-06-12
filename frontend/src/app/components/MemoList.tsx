@@ -36,7 +36,7 @@ interface SystemInfo {
 }
 
 export default function MemoList() {
-  const { memos, deleteMemo, updateMemo, fetchMemos, isLoading, isHydrated } = useMemoStore()
+  const { memos, deleteMemo, updateMemo, fetchMemos, isLoading } = useMemoStore()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState('')
   const [systemInfo, setSystemInfo] = useState<SystemInfo>({
@@ -50,16 +50,14 @@ export default function MemoList() {
   })
 
   const initializeMemos = useCallback(async () => {
-    if (typeof window !== 'undefined' && isHydrated) {
+    if (typeof window !== 'undefined') {
       await fetchMemos()
     }
-  }, [fetchMemos, isHydrated])
+  }, [fetchMemos])
 
   useEffect(() => {
-    if (isHydrated) {
-      initializeMemos()
-    }
-  }, [initializeMemos, isHydrated])
+    initializeMemos()
+  }, [initializeMemos])
 
   useEffect(() => {
     const collectSystemInfo = () => {
@@ -241,12 +239,14 @@ export default function MemoList() {
     if (!editContent.trim()) return;
     
     try {
-      await updateMemo({
-        id: memoId,
-        content: editContent,
-        userId: 'user123',
-        createdAt: new Date().toISOString()
-      });
+      const memoToUpdate = memos.find(m => m.id === memoId);
+      if (memoToUpdate) {
+        await updateMemo({
+          ...memoToUpdate,
+          content: editContent.trim(),
+          updatedAt: new Date().toISOString()
+        });
+      }
       setEditingId(null);
       setEditContent('');
     } catch (error) {
@@ -260,7 +260,7 @@ export default function MemoList() {
     setEditContent('');
   }, []);
 
-  if (!isHydrated) {
+  if (typeof window === 'undefined') {
     return <div className="loading">로딩 중...</div>
   }
 
@@ -308,7 +308,6 @@ export default function MemoList() {
                   <div className="memo-date">
                     <span>
                       {new Date(memo.createdAt).toLocaleString('ko-KR')}
-                      {memo.isOffline && <span className="offline-badge">오프라인</span>}
                     </span>
                     <div className="memo-actions">
                       {isMobile() ? (
