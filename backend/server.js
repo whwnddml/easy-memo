@@ -108,9 +108,9 @@ app.get('/api/memos', authenticateToken, async (req, res, next) => {
     // JWT 토큰에서 추출한 사용자 ID 사용
     const userId = req.userId;
     
-    // 페이징 파라미터
+    // 페이징 파라미터 (기본값: 10개씩)
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
     // 메모 조회 쿼리 생성

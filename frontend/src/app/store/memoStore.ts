@@ -100,9 +100,9 @@ export const useMemoStore = create<MemoStore>()(
             return;
           }
 
-          // 로그인한 경우 서버에서 가져오기 (페이징 적용)
+          // 로그인한 경우 서버에서 가져오기 (페이징 적용, 10개씩)
           const page = reset ? 1 : currentState.currentPage;
-          const response = await fetch(`${API_URL}/api/memos?page=${page}&limit=20`, {
+          const response = await fetch(`${API_URL}/api/memos?page=${page}&limit=10`, {
             headers: getAuthHeaders(),
             mode: 'cors',
             credentials: 'include'
@@ -153,7 +153,7 @@ export const useMemoStore = create<MemoStore>()(
           }
 
           const nextPage = currentState.currentPage + 1;
-          const response = await fetch(`${API_URL}/api/memos?page=${nextPage}&limit=20`, {
+          const response = await fetch(`${API_URL}/api/memos?page=${nextPage}&limit=10`, {
             headers: getAuthHeaders(),
             mode: 'cors',
             credentials: 'include'
