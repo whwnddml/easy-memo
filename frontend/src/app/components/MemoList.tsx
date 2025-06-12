@@ -315,10 +315,11 @@ export default function MemoList() {
     const scrollPosition = window.scrollY || window.pageYOffset;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
+    const scrolledToBottom = documentHeight - (scrollPosition + windowHeight) < 100;
+    const hasScrollbar = documentHeight > windowHeight;
     
-    // 스크롤이 하단에서 100px 이내일 때
-    if (documentHeight - (scrollPosition + windowHeight) < 100) {
-      console.log('스크롤 하단 감지, 추가 메모 로딩 시도');
+    // 스크롤바가 있고, 스크롤이 하단에 도달했을 때만 추가 로드
+    if (hasScrollbar && scrolledToBottom) {
       loadingRef.current = true;
       try {
         await loadMoreMemos();
@@ -332,8 +333,6 @@ export default function MemoList() {
   useEffect(() => {
     if (!ios) {
       window.addEventListener('scroll', handleScroll);
-      // 초기 로드 시 스크롤 체크
-      handleScroll();
       return () => window.removeEventListener('scroll', handleScroll);
     }
   }, [ios, handleScroll]);
