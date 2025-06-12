@@ -6,7 +6,18 @@ import { useMemoStore } from '../store/memoStore'
 // 데스크톱 환경 감지
 const isDesktop = () => {
   if (typeof window === 'undefined') return false;
-  return !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // 1. User Agent 체크
+  const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // 2. 터치 지원 여부 체크
+  const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  // 3. 화면 크기 체크 (768px 이하를 모바일로 간주)
+  const isSmallScreen = window.innerWidth <= 768;
+  
+  // 데스크톱은 모바일이 아닌 경우로 정의
+  return !isMobileUserAgent && !hasTouchSupport && !isSmallScreen;
 }
 
 export default function MemoForm() {
