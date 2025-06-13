@@ -1,0 +1,23 @@
+{
+  "name": "EasyMemo",
+  "short_name": "EasyMemo",
+  "description": "Easy Memo Application",
+  "start_url": "/easy-memo/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#4A90E2",
+  "scope": "/easy-memo/",
+  "icons": [
+    {
+      "src": "/easy-memo/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/easy-memo/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+} 
