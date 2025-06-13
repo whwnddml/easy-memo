@@ -329,7 +329,7 @@ h1 {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: #23272f !important;
+  background: transparent !important;
   box-shadow: none !important;
   outline: none !important;
   transition: background 0.2s, box-shadow 0.2s !important;
