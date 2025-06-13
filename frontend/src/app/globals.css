@@ -347,6 +347,7 @@ h1 {
 .memo-actions button.delete-btn {
   color: #ff6b6b !important;
   background: #23272f !important;
+  border-radius: 10px !important;
 }
 
 .memo-actions button.delete-btn:hover:not(:disabled) {
@@ -374,18 +375,6 @@ h1 {
 .memo-item .timestamp {
   color: #888;
   font-size: 0.98rem;
-}
-
-.memo-item .delete-btn {
-  background: none !important;
-  color: inherit !important;
-  border: none !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  font-size: inherit !important;
-  font-weight: inherit !important;
-  box-shadow: none !important;
-  transition: none !important;
 }
 
 .memo-empty {
