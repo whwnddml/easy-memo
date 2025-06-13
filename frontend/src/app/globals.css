@@ -335,12 +335,12 @@ h1 {
 
 .memo-actions button.edit-btn {
   color: #b0b8c1;
-  border-color: #b0b8c1;
+  border-color: #ff6b6b;
 }
 
 .memo-actions button.edit-btn:hover:not(:disabled) {
   background: #2c313a;
-  border-color: #4f8cff;
+  border-color: #ff6b6b;
   color: #4f8cff;
 }
 
