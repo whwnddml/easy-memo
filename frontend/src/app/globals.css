@@ -323,25 +323,19 @@ h1 {
   width: 40px;
   height: 40px;
   padding: 0;
+  border: none;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #23272f;
-  border: 1.5px solid #ff6b6b;
   box-shadow: none;
   outline: none;
-  transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .memo-actions button.edit-btn {
   color: #b0b8c1;
-  border: none;
-  border-radius: 10px;
-  background: #23272f;
-  box-shadow: none;
-  outline: none;
-  transition: background 0.2s, box-shadow 0.2s;
 }
 
 .memo-actions button.edit-btn:hover:not(:disabled) {
@@ -355,7 +349,6 @@ h1 {
 
 .memo-actions button.delete-btn:hover:not(:disabled) {
   background: #2c313a;
-  border-color: #ff6b6b;
   color: #ff6b6b;
 }
 
