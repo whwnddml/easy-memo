@@ -417,16 +417,15 @@ export default function MemoList() {
                     <div className="memo-actions">
                       {isMobile() ? (
                         <>
-                          <button 
-                            className="edit-btn"
+                          <button
                             onClick={() => handleEdit(memo)}
                             disabled={isLoading}
                             aria-label="수정"
+                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#b0b8c1] transition-colors duration-200 hover:bg-[#2c313a] hover:text-[#4f8cff] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <FaEdit size={14} />
                           </button>
-                          <button 
-                            className="delete-btn"
+                          <button
                             onClick={() => {
                               if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
                                 deleteMemo(memo.id)
@@ -434,22 +433,22 @@ export default function MemoList() {
                             }}
                             disabled={isLoading}
                             aria-label="삭제"
+                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#ff6b6b] transition-colors duration-200 hover:bg-[#2c313a] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <FaTrash size={14} />
                           </button>
                         </>
                       ) : (
                         <>
-                          <button 
-                            className="edit-btn"
+                          <button
                             onClick={() => handleEdit(memo)}
                             disabled={isLoading}
                             aria-label="수정"
+                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#b0b8c1] transition-colors duration-200 hover:bg-[#2c313a] hover:text-[#4f8cff] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <FaEdit size={18} />
                           </button>
-                          <button 
-                            className="delete-btn"
+                          <button
                             onClick={() => {
                               if (window.confirm('정말로 이 메모를 삭제하시겠습니까?')) {
                                 deleteMemo(memo.id)
@@ -457,6 +456,7 @@ export default function MemoList() {
                             }}
                             disabled={isLoading}
                             aria-label="삭제"
+                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#ff6b6b] transition-colors duration-200 hover:bg-[#2c313a] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <FaTrash size={18} />
                           </button>
