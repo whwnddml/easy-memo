@@ -444,8 +444,9 @@ export default function MemoList() {
                             className="edit-btn"
                             onClick={() => handleEdit(memo)}
                             disabled={isLoading}
+                            aria-label="수정"
                           >
-                            수정
+                            <FaEdit size={18} />
                           </button>
                           <button 
                             className="delete-btn"
@@ -455,8 +456,9 @@ export default function MemoList() {
                               }
                             }}
                             disabled={isLoading}
+                            aria-label="삭제"
                           >
-                            삭제
+                            <FaTrash size={18} />
                           </button>
                         </>
                       )}
