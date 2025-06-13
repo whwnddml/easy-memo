@@ -347,6 +347,7 @@ h1 {
 .memo-actions button.delete-btn {
   color: #ff6b6b;
   border-color: #ff6b6b;
+  background: #23272f;
 }
 
 .memo-actions button.delete-btn:hover:not(:disabled) {
