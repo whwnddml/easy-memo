@@ -423,7 +423,7 @@ export default function MemoList() {
                             aria-label="수정"
                             className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#b0b8c1] transition-colors duration-200 hover:bg-[#2c313a] hover:text-[#4f8cff] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <FaEdit size={14} />
+                            <FaEdit size={14} color="#2563eb" />
                           </button>
                           <button
                             onClick={() => {
@@ -433,9 +433,9 @@ export default function MemoList() {
                             }}
                             disabled={isLoading}
                             aria-label="삭제"
-                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#ff6b6b] transition-colors duration-200 hover:bg-[#2c313a] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#ff3b3b] transition-colors duration-200 hover:bg-[#2c313a] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <FaTrash size={14} />
+                            <FaTrash size={14} color="#ff3b3b" />
                           </button>
                         </>
                       ) : (
@@ -446,7 +446,7 @@ export default function MemoList() {
                             aria-label="수정"
                             className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#b0b8c1] transition-colors duration-200 hover:bg-[#2c313a] hover:text-[#4f8cff] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <FaEdit size={18} />
+                            <FaEdit size={18} color="#2563eb" />
                           </button>
                           <button
                             onClick={() => {
@@ -456,9 +456,9 @@ export default function MemoList() {
                             }}
                             disabled={isLoading}
                             aria-label="삭제"
-                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#ff6b6b] transition-colors duration-200 hover:bg-[#2c313a] disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="min-w-[40px] max-w-[40px] w-[40px] h-[40px] flex items-center justify-center rounded-[10px] bg-[#23272f] text-[#ff3b3b] transition-colors duration-200 hover:bg-[#2c313a] disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <FaTrash size={18} />
+                            <FaTrash size={18} color="#ff3b3b" />
                           </button>
                         </>
                       )}
