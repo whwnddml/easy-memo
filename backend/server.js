@@ -42,9 +42,7 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       family: 4,
-      authSource: 'admin',
-      retryWrites: true,
-      w: 'majority'
+      authSource: 'admin'
     });
     console.log('MongoDB 연결 성공');
 
