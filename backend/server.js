@@ -28,7 +28,7 @@ const connectDB = async () => {
   try {
     const MONGODB_USER = process.env.MONGODB_USER || 'admin';
     const MONGODB_PASSWORD = encodeURIComponent(process.env.MONGODB_PASSWORD);
-    const MONGODB_HOST = process.env.MONGODB_HOST || '172.18.0.2';
+    const MONGODB_HOST = process.env.MONGODB_HOST || '172.18.0.3';
     const MONGODB_PORT = process.env.MONGODB_PORT || '27017';
     const MONGODB_DB = process.env.MONGODB_DB || 'easymemo';
     
