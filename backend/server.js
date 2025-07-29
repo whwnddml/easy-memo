@@ -10,7 +10,7 @@ const Memo = require('./models/Memo');
 const app = express();
 
 // CORS 설정
-app.use(cors({
+const corsOptions = {
   origin: ['https://whwnddml.github.io', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'],
@@ -18,7 +18,28 @@ app.use(cors({
   exposedHeaders: ['Access-Control-Allow-Origin'],
   preflightContinue: false,
   optionsSuccessStatus: 204
-}));
+};
+
+// 모든 OPTIONS 요청에 대해 CORS 허용
+app.options('*', cors(corsOptions));
+
+// 일반 요청에 대한 CORS 적용
+app.use(cors(corsOptions));
+
+// 추가 CORS 헤더 설정
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://whwnddml.github.io');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Origin, X-Requested-With, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // OPTIONS 요청에 대한 즉시 응답
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
 
 // JSON 파싱 미들웨어
 app.use(express.json());

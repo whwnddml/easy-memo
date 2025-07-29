@@ -27,9 +27,10 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions;
 
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://junny.dyndns.org:3008'
-  : 'http://localhost:3008';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) {
+  throw new Error('API URL이 설정되지 않았습니다.');
+}
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -47,7 +48,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ isLoading: true, error: null });
         
         try {
-          const response = await fetch(`${API_URL}/api/users/login`, {
+          const response = await fetch(`${API_URL}/users/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ export const useAuthStore = create<AuthStore>()(
         }
 
         try {
-          const response = await fetch(`${API_URL}/api/users/verify-token`, {
+          const response = await fetch(`${API_URL}/users/verify-token`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
