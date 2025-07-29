@@ -92,7 +92,25 @@ const errorHandler = (err, req, res, next) => {
 
 // API 엔드포인트
 // 헬스 체크
-app.head('/api/memos', (req, res) => {
+app.get('/api/health', (req, res) => {
+  const healthcheck = {
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    mongodbStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  };
+  
+  try {
+    res.status(200).json(healthcheck);
+  } catch (error) {
+    healthcheck.status = 'error';
+    healthcheck.message = error.message;
+    res.status(503).json(healthcheck);
+  }
+});
+
+// 기존 HEAD 메서드 헬스 체크도 유지
+app.head('/api/health', (req, res) => {
   if (mongoose.connection.readyState === 1) {
     res.status(200).end();
   } else {
