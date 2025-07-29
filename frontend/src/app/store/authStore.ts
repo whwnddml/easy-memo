@@ -53,6 +53,7 @@ export const useAuthStore = create<AuthStore>()(
             headers: {
               'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify({ email, password }),
           });
 
@@ -107,6 +108,7 @@ export const useAuthStore = create<AuthStore>()(
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
             },
+            credentials: 'include',
           });
 
           const data = await response.json();
