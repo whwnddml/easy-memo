@@ -15,18 +15,22 @@ try {
   }
 } catch (e) {}
 
+const isDev = process.env.NODE_ENV !== 'production';
+const basePath = isDev ? '' : '/easy-memo';
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   output: 'export',
-  basePath: process.env.NODE_ENV === 'production' ? '/easy-memo' : '',
+  basePath: basePath,
   images: {
     unoptimized: true,
   },
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/easy-memo/' : '',
+  assetPrefix: isDev ? '' : '/easy-memo/',
   env: {
-    NEXT_PUBLIC_BASE_PATH: '/easy-memo',
+    NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_APP_VERSION: appVersion,
+    NEXT_PUBLIC_API_URL: isDev ? 'http://localhost:3005/api' : 'https://junny.dyndns.org:3008/api'
   }
 }
 

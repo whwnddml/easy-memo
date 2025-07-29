@@ -10,11 +10,12 @@
 
 ```mermaid
 graph TD
-    A[GitHub Pages] -->|호스팅| B[프론트엔드<br/>Next.js PWA]
-    B -->|API 요청| C[백엔드<br/>Express.js]
-    C -->|데이터 저장| D[MongoDB<br/>Docker]
-    E[사용자] -->|접속| A
-    B -->|오프라인 저장| F[로컬 스토리지]
+    A[사용자] -->|접속| B[GitHub Pages<br/>whwnddml.github.io]
+    B -->|API 요청| C[공유기<br/>Port:3008]
+    C -->|포트포워딩| D[시놀로지 NAS<br/>nginx:3008->3007]
+    D -->|프록시| E[백엔드 컨테이너<br/>Port:3007->3005]
+    E -->|내부 네트워크| F[MongoDB 컨테이너<br/>172.18.0.3:27017]
+    B -->|오프라인 저장| G[로컬 스토리지]
 ```
 
 ## 주요 기능
@@ -60,38 +61,124 @@ easymemo/
 
 ## 시작하기
 
-### 프론트엔드
-```bash
-cd frontend
-npm install
-npm run dev
+### 개발 환경 (Local)
+
+1. 환경변수 설정
+
+프론트엔드 (`frontend/.env.development`):
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3005/api
 ```
 
-### 백엔드
+백엔드 (`backend/.env.development`):
+```env
+MONGODB_HOST=localhost
+MONGODB_PORT=27017
+MONGODB_USER=admin
+MONGODB_PASSWORD=비밀번호
+MONGODB_DB=easymemo
+PORT=3005
+```
+
+2. MongoDB 실행
+```bash
+docker run -d --name easymemo-mongodb \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=admin \
+  -e MONGO_INITDB_ROOT_PASSWORD="비밀번호" \
+  mongo:4.4.18 --bind_ip 0.0.0.0
+```
+
+3. 백엔드 실행
 ```bash
 cd backend
 npm install
 npm run dev
 ```
 
-### Docker 컨테이너
+4. 프론트엔드 실행
 ```bash
-# MongoDB 실행
+cd frontend
+npm install
+npm run dev
+```
+
+### 프로덕션 환경 (Production)
+
+1. 환경변수 설정
+
+프론트엔드 (`frontend/.env.production`):
+```env
+NEXT_PUBLIC_API_URL=https://junny.dyndns.org:3008/api
+NEXT_PUBLIC_BASE_PATH=/easy-memo
+```
+
+백엔드 (`backend/.env.production`):
+```env
+MONGODB_HOST=172.18.0.3
+MONGODB_PORT=27017
+MONGODB_USER=admin
+MONGODB_PASSWORD=비밀번호
+MONGODB_DB=easymemo
+PORT=3005
+```
+
+2. Docker 컨테이너 실행 (Synology NAS)
+
+MongoDB 컨테이너:
+```bash
 docker run -d --name easymemo-mongodb \
   --network easymemo-network \
   -p 27017:27017 \
   -e MONGO_INITDB_ROOT_USERNAME=admin \
   -e MONGO_INITDB_ROOT_PASSWORD="비밀번호" \
   mongo:4.4.18 --bind_ip 0.0.0.0
+```
 
-# 백엔드 실행
+백엔드 컨테이너:
+```bash
 docker run -d --name easymemo-backend \
   --network easymemo-network \
-  -p 3008:3005 \
+  -p 3007:3005 \
   -v $(pwd)/backend:/app \
   -w /app \
   node:18 npm start
 ```
+
+3. nginx 설정 (Synology NAS)
+```nginx
+location /api {
+    proxy_pass http://localhost:3007;
+    
+    # 프록시 헤더
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    
+    # CORS 설정
+    add_header 'Access-Control-Allow-Origin' 'https://whwnddml.github.io' always;
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+    add_header 'Access-Control-Allow-Headers' 'Content-Type, Accept, Origin, X-Requested-With, Authorization' always;
+    add_header 'Access-Control-Allow-Credentials' 'true' always;
+    
+    # OPTIONS 요청 처리
+    if ($request_method = 'OPTIONS') {
+        add_header 'Access-Control-Allow-Origin' 'https://whwnddml.github.io' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Accept, Origin, X-Requested-With, Authorization' always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+        add_header 'Content-Type' 'text/plain charset=UTF-8';
+        add_header 'Content-Length' 0;
+        return 204;
+    }
+}
+```
+
+4. 공유기 포트포워딩 설정
+- 외부 포트: 3008
+- 내부 IP: 시놀로지 NAS IP
+- 내부 포트: 3008
 
 ## 배포
 

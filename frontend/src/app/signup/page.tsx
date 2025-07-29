@@ -36,11 +36,12 @@ export default function SignUpPage() {
 
     try {
       // 이메일 회원가입 API 호출
-      const API_URL = process.env.NODE_ENV === 'production' 
-        ? 'https://junny.dyndns.org:3008'
-        : 'http://localhost:3008';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      if (!API_URL) {
+        throw new Error('API URL이 설정되지 않았습니다.');
+      }
         
-      const response = await fetch(`${API_URL}/api/users`, {
+      const response = await fetch(`${API_URL}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

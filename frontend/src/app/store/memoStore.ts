@@ -27,7 +27,7 @@ interface MemoStore {
 
 const API_URL = process.env.NODE_ENV === 'production' 
   ? 'https://junny.dyndns.org:3008'
-  : 'http://localhost:3008';
+  : 'http://localhost:3005';
 
 // 로컬 스토리지에서 메모 관리
 const getLocalMemos = (): Memo[] => {
