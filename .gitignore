@@ -76,15 +76,4 @@ out/
 *.tmp
 *.temp
 .env*.local
-mongodb/data/_mdb_catalog.wt
-mongodb/data/collection-2--631271073823425554.wt
-mongodb/data/collection-4--631271073823425554.wt
-mongodb/data/index-3--631271073823425554.wt
-mongodb/data/index-5--631271073823425554.wt
-mongodb/data/index-6--631271073823425554.wt
-mongodb/data/sizeStorer.wt
-mongodb/data/WiredTiger.turtle
-mongodb/data/WiredTiger.wt
-mongodb/data/diagnostic.data/metrics.2025-06-14T00-21-34Z-00000
-mongodb/data/diagnostic.data/metrics.interim
-mongodb/data/journal/WiredTigerLog.0000000002
+mongodb/
