@@ -1,8 +1,27 @@
 'use client';
+import React from 'react';
+import dynamic from 'next/dynamic';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
+
+// Dynamic import 사용하여 컴포넌트 분리
+const PasswordResetForm = dynamic(() => import('../components/PasswordResetForm'), { ssr: false });
+
+const PasswordReset = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PasswordResetForm />
+    </Suspense>
+  );
+};
+
+export default PasswordReset;
+
+
+
+/*
 const PasswordReset = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -98,11 +117,11 @@ const PasswordReset = () => {
           </button>
         </div>
       )}
-
-        {error && <p className="text-red-600 text-center">{error}</p>}
+      {error && <p className="text-red-600 text-center">{error}</p>}
       </div>
     </div>
   );
 };
 
 export default PasswordReset;
+*/
