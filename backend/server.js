@@ -6,6 +6,8 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 
+// 서버 배포용 테스트 작업.
+
 // 모델 import
 const User = require('./models/User');
 const Memo = require('./models/Memo');
