@@ -38,6 +38,9 @@ jobs:
           script: |
             export PATH="/usr/local/bin:$PATH"
             cd /volume1/docker2/easymemo-backend
+            
+            # 현재 SSH 접속 사용자 출력
+            echo "현재 SSH 접속 사용자: $(whoami)"
 
             # 중요 파일 백업
             cp docker-compose.yml docker-compose.yml.backup
