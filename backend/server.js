@@ -1,6 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 
 // 모델 import
@@ -11,7 +14,14 @@ const app = express();
 
 // CORS 설정
 const corsOptions = {
-  origin: ['https://whwnddml.github.io', 'http://localhost:3000'],
+  origin: (origin, callback) => {
+    const allowedOrigins = ['https://whwnddml.github.io', 'http://localhost:3000'];
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept', 'Origin', 'X-Requested-With', 'Authorization'],
@@ -26,6 +36,7 @@ app.options('*', cors(corsOptions));
 // 일반 요청에 대한 CORS 적용
 app.use(cors(corsOptions));
 
+/*
 // 추가 CORS 헤더 설정
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'https://whwnddml.github.io');
@@ -40,6 +51,7 @@ app.use((req, res, next) => {
   
   next();
 });
+*/
 
 // JSON 파싱 미들웨어
 app.use(express.json());
@@ -110,6 +122,124 @@ const errorHandler = (err, req, res, next) => {
     message: err.message || '서버 내부 오류가 발생했습니다'
   });
 };
+
+
+
+
+// 토큰 없이 패스워드 초기화
+app.post('/api/users/reset-password-direct', async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  if (!email || !newPassword) {
+    return res.status(400).json({ message: '이메일과 새 패스워드는 필수입니다.' });
+  }
+
+  try {
+    // 사용자 검색
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 새 패스워드 해싱
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 패스워드 업데이트
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: '패스워드가 성공적으로 초기화되었습니다.' });
+  } catch (error) {
+    console.error('패스워드 초기화 중 오류 발생:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 패스워드 초기화 요청 엔드포인트 추가
+app.post('/api/users/password-reset-request', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: '이메일은 필수입니다.' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 초기화 토큰 생성
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = await bcrypt.hash(resetToken, 10);
+    const tokenExpiry = Date.now() + 3600000; // 1시간 후 만료
+
+    // 사용자 데이터베이스에 토큰 저장
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = tokenExpiry;
+    await user.save();
+
+    // 이메일 전송
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.naver.com',
+      port: 587,
+      secure: false, // true 일 경우 465, false 일 경우 587
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      logger: true, // 디버깅 로그 활성화
+      debug: true,  // 디버깅 활성화
+    });
+    
+
+    const resetLink = `http://localhost:3000/password-reset?token=${resetToken}&email=${email}`;
+    await transporter.sendMail({
+      from: `"EasyMemo" <${process.env.EMAIL_USER}>`, // 발신자 이메일
+      to: email,
+      subject: '패스워드 초기화 요청',
+      text: `다음 링크를 클릭하여 패스워드를 초기화하세요: ${resetLink}`,
+    });
+
+    res.status(200).json({ message: '패스워드 초기화 이메일이 전송되었습니다.' });
+  } catch (error) {
+    console.error('비밀번호 재설정 요청 중 오류 발생:', error);
+    res.status(500).json({ message: '서버 오류가 발생했습니다.' });
+  }
+});
+
+// 패스워드 업데이트 엔드포인트 추가
+app.post('/api/users/password-reset', async (req, res, next) => {
+  try {
+    const { email, token, newPassword } = req.body;
+    // 필수 필드 확인
+    if (!email || !token || !newPassword) {
+      return res.status(400).json({ message: '모든 필드를 입력해야 합니다.' });
+    }
+    // 사용자 검색
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 토큰 검증
+    const isTokenValid = await bcrypt.compare(token, user.resetPasswordToken);
+    if (!isTokenValid || user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ message: '유효하지 않거나 만료된 토큰입니다.' });
+    }
+
+    // 패스워드 해싱 및 업데이트
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: '패스워드가 성공적으로 변경되었습니다.' });
+  } catch (error) {
+    console.error('비밀번호 재설정 중 오류 발생:', error);
+    next(error);
+  }
+});
 
 // API 엔드포인트
 // 헬스 체크

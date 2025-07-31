@@ -1,17 +1,21 @@
 'use client';
 
+/* HomeContent Componet */
+
 import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from './store/authStore';
 import { useMemoStore } from './store/memoStore';
 import LoginForm from './components/LoginForm';
 import MemoForm from './components/MemoForm';
 import MemoList from './components/MemoList';
+import Link from 'next/link';
 
 function HomeContent() {
   const { isAuthenticated, verifyToken, logout, user } = useAuthStore();
   const { fetchMemos, clearMemos } = useMemoStore();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [isGuestMode, setIsGuestMode] = useState(false);
 
   useEffect(() => {
@@ -32,8 +36,11 @@ function HomeContent() {
   useEffect(() => {
     if (isAuthenticated || isGuestMode) {
       fetchMemos();
+    } else {
+      //router.push('/login'); // 로그인 상태가 아니면 로그인 페이지로 이동
+      clearMemos();
     }
-  }, [isAuthenticated, isGuestMode, fetchMemos]);
+  }, [isAuthenticated, isGuestMode, fetchMemos, clearMemos]);
 
   const handleLogout = () => {
     clearMemos();
@@ -48,9 +55,21 @@ function HomeContent() {
     window.history.replaceState({}, '', '/');
   };
 
+  const handleEnableGuestMode = () => {
+    setIsGuestMode(true);
+    window.history.replaceState({}, '', '/?mode=guest');
+  };
+
   if (!isAuthenticated && !isGuestMode) {
-    return <LoginForm />;
+    return (
+      <div>
+      <LoginForm />
+    </div>
+    );
   }
+
+  //console.log('isAuthenticated:', isAuthenticated);
+  //console.log('isGuestMode:', isGuestMode);
 
   return (
     <main className="container">
@@ -60,10 +79,7 @@ function HomeContent() {
           {isAuthenticated ? (
             <>
               <span>안녕하세요, {user?.email}님!</span>
-              <button 
-                onClick={handleLogout}
-                className="logout-btn"
-              >
+              <button onClick={handleLogout} className="logout-btn">
                 로그아웃
               </button>
             </>
@@ -71,10 +87,7 @@ function HomeContent() {
             <>
               <span>게스트 모드 (로컬 저장)</span>
               <div className="guest-actions">
-                <button 
-                  onClick={handleLoginMode}
-                  className="login-btn"
-                >
+                <button onClick={handleLoginMode} className="login-btn">
                   로그인하기
                 </button>
               </div>
@@ -82,6 +95,7 @@ function HomeContent() {
           )}
         </div>
       </div>
+      
       <MemoForm />
       <MemoList />
     </main>

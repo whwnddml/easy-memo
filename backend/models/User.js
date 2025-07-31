@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'  // 기본값은 일반 사용자
   },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   createdAt: { 
     type: Date, 
     default: Date.now, 

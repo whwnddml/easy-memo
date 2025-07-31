@@ -19,7 +19,11 @@ export default function LoginForm() {
       return;
     }
 
-    await login(email.trim(), password);
+    //await login(email.trim(), password);
+    const success = await login(email, password);
+    if (success) {
+      router.push('/memos'); // 로그인 성공 시 메모 목록 화면으로 이동
+    }
   };
 
   const handleGuestMode = () => {
@@ -125,6 +129,15 @@ export default function LoginForm() {
                 className="font-medium text-indigo-600 hover:text-indigo-500 underline"
               >
                 게스트 모드로 바로 시작
+              </button>
+            </p>
+            <p className="text-sm text-gray-600">
+              <button
+                type="button"
+                onClick={() => router.push('/password-reset-request')}
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                비밀번호 재설정
               </button>
             </p>
           </div>

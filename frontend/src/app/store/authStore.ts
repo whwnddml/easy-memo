@@ -53,7 +53,7 @@ export const useAuthStore = create<AuthStore>()(
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include', // 쿠키를 포함하여 요청
             body: JSON.stringify({ email, password }),
           });
 
