@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { API_BASE_URL } from '../config/api'; // API 경로 상수 가져오기
 
 const PasswordResetRequest = () => {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ const PasswordResetRequest = () => {
     }
     
     try {
-      const response = await fetch('http://localhost:3005/api/users/password-reset-request', {
+      const response = await fetch(`${API_BASE_URL}/users/password-reset-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,10 +1,13 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
+
+const { FRONTEND_URL } = require('./config');
 
 // 서버 배포용 테스트 작업.
 
@@ -193,8 +196,8 @@ app.post('/api/users/password-reset-request', async (req, res, next) => {
       debug: true,  // 디버깅 활성화
     });
     
-
-    const resetLink = `http://localhost:3000/password-reset?token=${resetToken}&email=${email}`;
+    // 이메일 내용 작성
+    const resetLink = `${FRONTEND_URL}/password-reset?token=${resetToken}&email=${email}`;
     await transporter.sendMail({
       from: `"EasyMemo" <${process.env.EMAIL_USER}>`, // 발신자 이메일
       to: email,

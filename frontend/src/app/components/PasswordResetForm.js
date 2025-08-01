@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { API_BASE_URL } from '../config/api'; // API 경로 상수 가져오기
 
 const PasswordResetForm = () => {
   const searchParams = useSearchParams();
@@ -26,7 +27,7 @@ const PasswordResetForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3005/api/users/password-reset', {
+      const response = await fetch(`${API_BASE_URL}/users/password-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
