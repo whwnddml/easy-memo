@@ -22,6 +22,9 @@ export default function LoginForm() {
     //await login(email.trim(), password);
     const success = await login(email, password);
     if (success) {
+      // 로그인 상태 업데이트
+      // 로그인 성공 후 사용자 상태 업데이트
+      useAuthStore.getState().isAuthenticated = true;
       router.push('/memos'); // 로그인 성공 시 메모 목록 화면으로 이동
     }
   };
