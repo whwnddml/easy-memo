@@ -8,9 +8,7 @@ const PasswordResetRequest = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
- 
   const [buttonText, setButtonText] = useState('요청'); // 버튼 텍스트 상태 추가
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +19,8 @@ const PasswordResetRequest = () => {
 
     if (!email.includes('@')) {
       setError('유효한 이메일 주소를 입력하세요.');
+      setIsLoading(false);
+      setButtonText('요청');
       return;
     }
     
@@ -39,7 +39,6 @@ const PasswordResetRequest = () => {
       }
 
       setMessage('비밀번호 재설정 이메일이 전송되었습니다. 이메일을 확인하세요.');
-      
       setButtonText('요청 완료'); // 요청 성공 시 버튼 텍스트 변경
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
@@ -68,10 +67,12 @@ const PasswordResetRequest = () => {
           />
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || buttonText === '요청 완료'} // 버튼 비활성화 조건 추가
             aria-label="비밀번호 재설정 요청"
             className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
-              isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+              isLoading || buttonText === '요청 완료'
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700'
             } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
           >
             {buttonText}
