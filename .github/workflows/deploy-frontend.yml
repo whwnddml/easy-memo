@@ -36,6 +36,9 @@ jobs:
           npm run build
           touch out/.nojekyll
           echo "whwnddml.github.io/easy-memo" > out/CNAME
+        env: 
+          NODE_ENV: production
+          NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_API_BASE_URL }}
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4

@@ -52,6 +52,219 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add GitHub Pages deployment workflow
 
 ### Changed
+- 디버깅용 소스수정
+- 설명수정
+- sudo 명령어 제거, sudores 수정
+- 도커명령에 sudo 적용
+- 시놀로지 ssh 사용자를 콘솔에 출력하는 코드 추가
+- 서버배포 테스트
+- 패스워드 재설정을 다이내믹폼으로 변경
+- 깃정리
+- 비밀번호 초기화 기능 추가 및 기존기능 개선
+- 몽고디비를 아이피가 아닌 컨테이너 이름으로 지정.
+- 체인지로그
+- 소소한변경
+- 깃이그노어에 몽고디비 경로 추가
+- 백엔드 변경사항 추가
+- 몽고디비내부 아이피 변경
+- chore: MongoDB 데이터 폴더를 Git에서 제외
+- memo-actions 버튼 네모박스 배경을 완전히 투명하게 변경 (background: transparent)
+- 수정/삭제 버튼 배경색을 투명(bg-transparent)으로 변경
+- 수정(연필) 아이콘 파랑, 삭제(휴지통) 아이콘 빨강으로 색상 변경
+- 수정/삭제 버튼 스타일을 Tailwind CSS로 리팩토링
+- 삭제(휴지통) 버튼 배경색도 수정 버튼과 동일하게 검정색(#23272f)으로 통일
+- 수정/삭제 버튼 모두 테두리 없이, 배경/라운드 동일하게 통일. 아이콘 색상만 다르게 유지
+- 수정(연필) 버튼의 테두리(border) 제거, 배경/라운드/아이콘만 유지
+- 수정/삭제 버튼 테두리, 라운드, 배경 등 모든 스타일 완전 통일 및 불필요한 하위 스타일 제거
+- 수정(연필) 버튼 테두리/배경/둥글기/두께를 삭제(휴지통) 버튼과 완전히 동일하게 통일
+- 버튼테두리 스타일 통일
+- 삭제(휴지통) 버튼도 어두운 배경으로 통일 및 스타일 개선
+- 메모 수정/삭제 버튼을 아이콘 버튼(네모, 라운드, 어두운 배경, 아이콘만)으로 변경 및 스타일 개선
+- 헤더에서 제목과 인사말/로그아웃 버튼을 세로로 분리하여 가독성 개선
+- 5차
+- 마지막이었음좋겠다.
+- 스크롤페이징기능수정중2
+- 스크롤페이징 기능 수정중
+- 수정중 테스트
+- 스크롤이벤트감지방식변경
+- 아이폰이 아닌경우 이벤트 삭제된것 복구
+- 아이폰의 경우 버튼방식 페이징
+- 아이폰 단순 스크롤 사용
+- 아이폰 PWA 버그 대응
+- 무한스크롤방식 변경
+- 아이콘 스크롤 더 부드럽게
+- 스크롤관련 개선작업
+- 백엔드의 기본페이징을 10개 단위로 수정
+- 무한스크롤을 위한 백엔드 수정
+- 체인지로그
+- 무한스크롤적용
+- 서버로그 추가
+- docs: auto-update CHANGELOG from pre-push hook
+- docs: update changelog for version 1.0.0
+- chore: 불필요한 상위 폴더 package 파일들과 Next.js 파일들 삭제
+- refactor: 스키마를 models 디렉토리로 분리
+- 롤백
+- 오전으로 롤백
+- trigger: 재배포 트리거 2025-06-11_23:16:34
+- Restore previous API configuration
+- Setup GitHub Pages deployment
+- chore: 프로젝트 구조 정리 및 의존성 업데이트
+- chore: APP_VERSION 환경변수 방식으로 변경 및 빌드시 자동 주입
+- 백엔드 리드미 수정
+- 프론트엔드의 워크플로우 변경.
+- 백엔드 npm install 실행 후 package-lock.json 반영
+- 19차 백엔드 수정
+- 백엔드 dotenv 디펜던시 추가
+- 18차 백엔드 수정
+- 17차 백엔드 수정
+- 16차 백엔드 수정
+- 백엔드 15차 수정.
+- 백엔드 14차 수정(sudo 제거)
+- 백엔드 13차 수정
+- 12차 백엔드 워크플로우 수정
+- 11차 백엔드 수정(깃헙액션 워크플로우 포함)
+- 백엔드 10차 테스트
+- 백엔드 9차
+- 백엔드 8차
+- 백엔드 7번째수정
+- 백엔드6차테스트
+- test: docker-compose 기반 자동 배포 테스트
+- test: GitHub Actions 배포 테스트 (2차)
+- test: GitHub Actions 배포 테스트
+- 패키지 관련 파일 삭제: package.json 및 package-lock.json 파일을 제거하여 의존성 관리 방식을 변경함
+- 몽고디비패스워드변경
+- Improve: 메모 작성 UI 단순화
+- Improve: 로딩 UI 개선 및 레이아웃 고정
+- Improve: UI/UX 개선 - 로딩 상태 및 전환 효과
+- 몽고디비를 활용한 메모데이터 서버 저장
+- Update: 메모 삭제 기능 개선 및 빌드
+- 백엔드 서비스에 몽고디비 연결
+- 서버모듈 작성, 몽고디비 연결
+- UI 개선: 버튼 정렬, 안내문구, 카드 스타일 등 전반적 개선
+- Build and deploy to GitHub Pages
+- Simplify GitHub Pages deployment workflow
+- Use browser storage in production mode
+
+### Removed
+- 삭제(휴지통) 버튼 라운드 적용 위해 .memo-item .delete-btn 블록 완전 삭제
+
+### Fixed
+- fix:비밀번호 변경요청시 고정된 프론트엔드, 백엔드 api 경로를 환경파일에 상수화 처리
+- fix: 로그인 요청에 credentials 옵션 추가
+- fix: CORS 설정 강화 및 헬스 체크 API 추가
+- fix: MongoDB 복제 세트 관련 옵션 제거
+- fix: 모바일 환경 감지 로직 개선 (터치 지원 및 화면 크기 체크 추가)
+- fix: 데스크톱 환경에서만 Ctrl+Enter 안내 표시
+- Fix build errors: Remove getUserId import and fix type issues in components
+- fix: 새 메모를 배열 맨 앞에 추가하도록 수정
+- fix: GitHub Actions 워크플로우 out 디렉토리 경로 수정
+- fix: 중복된 deploy.yml 워크플로우 파일 삭제
+- fix: GitHub Actions 워크플로우의 빌드 결과물 경로 수정
+- fix: userId 처리 방식 개선 및 react-icons 추가
+- fix: 프론트엔드 정적 배포 설정 수정
+- fix: next export 명령어 제거
+- fix: userId 처리 로직 개선
+- fix: next.config.js 설정 수정 (static export 지원)
+- fix: userId 설정 및 의존성 버전 업데이트
+- Fix memo edit functionality in MemoList
+- Fix memoStore API handling and error messages
+- Fix page.tsx and remove online/offline functionality
+- Fix MemoForm component
+- Simplify memoStore and fix memo update
+- fix: PWA 아이콘 경로 수정
+- fix: APP_VERSION 관련 스크립트 오류 수정
+- fix: hydration 및 로딩 상태 관리 개선
+- fix: 서버 연결 체크 타임아웃 추가 및 에러 처리 개선
+- fix: Hydration 오류 해결 및 상태 관리 개선 - Store/컴포넌트 수정, hydration 프로세스 개선
+- fix: React Hydration 오류(#418, #423) 해결 - Zustand persist 설정 최적화 및 컴포넌트 성능 개선
+- fix: React Hydration 오류(#423) 해결 - 상태 업데이트 최적화 및 불필요한 리렌더링 방지
+- fix: React Hydration 오류 해결 - APP_VERSION 환경변수 사용 및 브라우저 API 사용 개선
+- fix: APP_VERSION 고정값 적용 및 브라우저 API 접근 개선
+- fix: APP_VERSION import 방식 복구 및 skipHydration 옵션 제거로 React hydration 오류 방지
+- fix: 메모 수정 시 userId도 body에 포함되도록 반영
+- fix: 오프라인 메모 동기화 시 중복 방지 및 APP_VERSION import 오류 예외처리
+- fix: 오프라인 상태에서도 메모 입력 및 저장 가능하도록 입력창/버튼 활성화 및 안내 메시지 추가
+- fix: POST /api/memos에서 userId를 body와 query 모두 허용하도록 개선
+- fix: react-icons 패키지 설치 및 의존성 파일 반영
+- fix: 상단 수집 정보 제거 및 수정/삭제 버튼 고정 크기/정렬 개선
+- fix: 구글 애널리틱스 정보 위치 이동 및 모바일 버튼 크기/정렬 개선
+- fix: 메모 수정창 너비 조정
+- fix: 메모 입력창 너비 조정
+- fix: GitHub Actions 배포 스크립트 수정 (Git 소유권 및 Docker 경로 문제 해결)
+- fix: GitHub Actions 배포 스크립트 수정
+- fix: Google Analytics 운영체제 감지 개선
+- fix: 안드로이드 기기 모델명 추출 로직 개선
+- fix: iOS Chrome 브라우저 감지 로직 개선
+- fix: GA 운영체제 감지 로직 개선 (iOS 기기 정확한 감지)
+- fix: Docker 환경변수 설정을 .env 파일로 변경
+- fix: Google Analytics 스크립트 로딩 방식 수정
+- fix: Google Analytics 설정 개선
+- fix: 메모 삭제 시 ID 처리 로직 개선
+- Fix: manifest.json 및 아이콘 경로 수정
+- Fix: 메모 삭제 시 _id 처리 개선
+- fix: API 서버 연결 체크 로직 개선 및 디버깅 로그 추가
+- fix: API URL 업데이트 및 온라인 상태 감지 로직 개선
+- Fix GitHub Actions workflow: Add build output verification
+- Fix build process: Remove next export and appDir option
+- Fix GitHub Pages deployment: - Remove PWA temporarily - Add CNAME and 404 page - Clean up build process
+- Fix GitHub Pages deployment: - Copy static files to root directory
+- Fix GitHub Pages deployment: - Enable app directory
+- Fix GitHub Pages deployment: - Add .nojekyll file
+- Fix GitHub Pages deployment: - Add distDir configuration
+- Fix GitHub Pages deployment: - Update build and export scripts - Add commit message to deployment
+- Fix GitHub Pages deployment: - Add assetPrefix - Disable PWA in development
+- Fix GitHub Pages deployment: - Add export script - Update GitHub Actions workflow
+- Fix GitHub Pages deployment: - Update build script to generate static files - Add single-commit option to deployment workflow
+- Fix type errors and improve UI/UX: - Fix type errors in memoStore - Add offline status badge - Improve loading and error states - Add empty state for memo list - Update styles for better user experience
+
+### Security
+- security: add JWT authentication to user management APIs
+
+## [1.0.0] - 2025-08-01
+
+### Added
+- feat: 헬스 체크 API 추가 및 .gitignore 업데이트
+- feat: memo-actions 버튼 네모박스 배경을 완전히 투명하게 변경 (background: transparent)
+- feat: 모바일 환경에서 메모 입력창 플레이스홀더 단순화
+- feat: enhance PWA for native app-like experience on iOS
+- feat: implement role-based admin authorization system
+- docs: update CHANGELOG for JWT authentication implementation
+- feat: Add JWT authentication to API endpoints
+- feat(auth): implement enhanced signup flow with guest mode - Add guest mode option back to login page - Create comprehensive signup page with email/password and Google social login tabs - Support guest mode via URL parameter (?mode=guest) - Add guest mode UI with login button in header - Create /signup route with form validation and error handling - Update CSS with guest mode and login button styles - Fix Suspense boundary for useSearchParams - Maintain dual storage system (guest=localStorage, auth=server)
+- feat(docs): implement automated CHANGELOG system - Add CHANGELOG.md with version history - Create automated changelog update script - Add Git hooks for automatic changelog updates - Include npm scripts for version management - Update README with changelog management guide - Support semantic versioning and commit categorization
+- Implement login-first flow: - Main page shows login form first - After login shows memo list with logout button - Remove guest mode option - Add header with user info and logout button - Add mobile responsive styles for header
+- feat: JWT 토큰 기반 인증 시스템 구현 및 로그인/게스트 모드 분리
+- feat: User 스키마에 password, socialKey 필드 추가 및 인증 API 구현
+- feat: 사용자 관리 API 추가 (등록/조회/수정/삭제)
+- feat: 로그인 기능 추가
+- feat: 일반 브라우저에서도 버튼 크기 축소 및 레이아웃 개선
+- feat: 모바일에서 날짜와 수정/삭제 버튼을 같은 줄에 표시
+- feat: 시스템 정보 수집 기능 개선
+- feat: userId 기반 사용자별 메모 분리 저장/조회/수정/삭제 기능 반영 (백엔드+프론트)
+- feat: userId 기반 사용자별 메모 분리 저장/조회/수정/삭제 기능 반영
+- feat: 앱버전 자동 생성 및 GA 전송 기능 추가
+- feat: 운영체제 이름+버전+platform 표시 및 GA 커스텀 차원 설명 추가
+- feat: 모바일-아이콘/PC-텍스트 분기형 수정/삭제 버튼 적용
+- feat: 데스크톱 환경에서 Ctrl+Enter로 메모 저장 단축키 기능 추가
+- feat: 모바일 친화적 3줄 카드형 메모 레이아웃 및 버튼 스타일 적용
+- feat: 메모 삭제 시 확인창(Confirm) 추가
+- feat: API 요청/응답 로깅 추가
+- feat: 백엔드 메모 수정 API 추가
+- feat: 메모 수정 기능 추가
+- feat: User-Agent 디버그 정보 표시 추가
+- feat: Android 기기 모델명 추출 로직 개선
+- feat: 디바이스 모델명 수집 기능 추가
+- feat: 운영체제 버전과 브라우저 정보 표시 추가
+- feat: 메모 입력창 하단에 실제 수집 정보 값 표시
+- feat: 메모 입력창 하단에 수집 정보 표시 추가 (개발용)
+- feat: GA에 모바일 플랫폼(안드로이드/iOS) 구분 로직 추가
+- feat: GA 커스텀 이벤트 추가 및 PWA 설정 업데이트
+- feat: Google Analytics 추가
+- feat: 온라인 상태 체크 로직 개선 및 주기적 체크 추가
+- feat: 온라인/오프라인 상태 관리 및 동기화 로직 개선
+- Add GitHub Pages deployment workflow
+
+### Changed
 - 설명수정
 - sudo 명령어 제거, sudores 수정
 - 도커명령에 sudo 적용
