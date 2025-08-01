@@ -196,6 +196,8 @@ app.post('/api/users/password-reset-request', async (req, res, next) => {
       debug: true,  // 디버깅 활성화
     });
     
+    console.log('frontend URL:', FRONTEND_URL);
+
     // 이메일 내용 작성
     const resetLink = `${FRONTEND_URL}/password-reset?token=${resetToken}&email=${email}`;
     await transporter.sendMail({
