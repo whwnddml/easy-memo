@@ -14,7 +14,7 @@ graph TD
     B -->|API 요청| C[공유기<br/>Port:3008]
     C -->|포트포워딩| D[시놀로지 NAS<br/>nginx:3008->3007]
     D -->|프록시| E[백엔드 컨테이너<br/>Port:3007->3005]
-    E -->|내부 네트워크| F[MongoDB 컨테이너<br/>172.18.0.3:27017]
+    E -->|내부 네트워크| F[MongoDB 컨테이너<br/>easymemo-mongodb:27017]
     B -->|오프라인 저장| G[로컬 스토리지]
 ```
 
@@ -115,7 +115,7 @@ NEXT_PUBLIC_BASE_PATH=/easy-memo
 
 백엔드 (`backend/.env.production`):
 ```env
-MONGODB_HOST=172.18.0.3
+MONGODB_HOST=easymeno-mongodb
 MONGODB_PORT=27017
 MONGODB_USER=admin
 MONGODB_PASSWORD=비밀번호
@@ -190,6 +190,7 @@ location /api {
 - Synology NAS Docker
 - MongoDB 컨테이너
 - Node.js 백엔드 컨테이너
+- GitHub Actions 워크플로우
 
 ## 환경 변수
 
@@ -281,3 +282,24 @@ Git push 시 자동으로 CHANGELOG.md가 업데이트됩니다:
 ## 라이선스
 
 MIT License 
+
+### 시놀로지 NAS 권한 문제 해결
+
+#### 문제
+- Docker 데몬 소켓(`/var/run/docker.sock`)에 접근하려고 할 때 `permission denied` 오류 발생.
+
+#### 원인
+- SSH로 접속한 사용자가 Docker 그룹에 속해 있지 않음.
+
+#### 해결 방법
+1. SSH로 접속한 사용자를 Docker 그룹에 추가:
+   ```bash
+   sudo usermod -aG docker <username>
+
+
+2. Docker 소켓 권한 확인 및 수정:
+   ```bash
+   ls -l /var/run/docker.sock
+   sudo chmod 660 /var/run/docker.sock
+
+3. SSH 세션을 종료하고 다시 로그인하여 변경 사항 적용.
